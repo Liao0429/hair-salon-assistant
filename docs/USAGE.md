@@ -1,3 +1,22 @@
+## 1. 一键启动（推荐，双击即用）
+
+项目根目录有两个**双击就能用**的脚本：
+
+| 脚本 | 作用 |
+|---|---|
+| **`start.bat`** | **一键启动** Web 界面，自动打开浏览器 |
+| **`setup.bat`** | **一键安装依赖**（首次部署/换电脑时用） |
+
+### 首次部署（换电脑/给客户装）
+1. 双击 `setup.bat` → 自动创建虚拟环境 + 安装依赖
+2. 双击 `start.bat` → 浏览器自动打开 http://localhost:8000
+
+### 日常启动
+- 直接双击 `start.bat` 即可
+- 关闭黑色窗口 = 停止服务
+
+> 如果你没有 `start.bat`（例如代码是旧版），也可以用下面的手动命令启动。
+
 # 使用指南（中文）
 
 这是 AI 美发店预约助手的完整使用说明。适合**开发者/项目作者**，也适合**交付给客户前的操作**。
@@ -10,7 +29,7 @@
 
 > ⚠️ **Windows 注意事项**：如果从 Hermes/其他 Python 环境启动，可能会被 `PYTHONPATH` 污染。推荐用下面的 `env -u` 命令启动，确保干净环境。
 
-## 1. 启动 Web 界面（最直观，推荐）
+## 2. 启动 Web 界面（手动方式）
 
 ```bash
 cd /g/hair-salon-assistant
@@ -34,7 +53,7 @@ AI: 收集信息、确认、预约...
 
 停止服务：按 `Ctrl+C`。
 
-## 2. 命令行对话（CLI）
+## 3. 命令行对话（CLI）
 
 ```bash
 cd /g/hair-salon-assistant
@@ -43,7 +62,7 @@ env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV .venv/Scripts/python.exe main.py
 
 输入 `exit` 或 `quit` 退出。
 
-## 3. 配置模型（`.env`）
+## 4. 配置模型（`.env`）
 
 打开 `.env`，改这三个变量即可换模型（**模型成本可转嫁客户**）：
 
@@ -60,7 +79,7 @@ MODEL_NAME=kilo-auto/free
 ```
 
 
-## 3.5 预约信息存储（SQLite，零配置）
+## 4.5 预约信息存储（SQLite，零配置）
 
 预约信息**自动保存到本地 SQLite 数据库**：`G:\hair-salon-assistant\booking.db`。
 - 无需配置任何外部服务，预约即落盘
@@ -96,7 +115,7 @@ env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV .venv/Scripts/python.exe view_boo
 
 > `booking.db` 已被 `.gitignore` 排除（属于运行数据，不入库）。
 
-## 4. 配置 Google Calendar（可选，用于真实日历同步）
+## 5. 配置 Google Calendar（可选，用于真实日历同步）
 
 1. 到 Google Cloud Console 创建 OAuth 凭据（桌面应用），下载 `credentials.json`
 2. 把文件放到项目 `security/credentials.json`
@@ -105,7 +124,7 @@ env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV .venv/Scripts/python.exe view_boo
 
 不配置日历也能用（对话功能正常，只是预约不落日历）。
 
-## 5. 运行测试
+## 6. 运行测试
 
 ```bash
 cd /g/hair-salon-assistant
@@ -119,7 +138,7 @@ env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV .venv/Scripts/python.exe run_test
 env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV .venv/Scripts/python.exe -m pytest -q
 ```
 
-## 6. 交付给客户（成本转移）
+## 7. 交付给客户（成本转移）
 
 客户不需要碰代码。你要做的：
 1. 把项目部署到客户环境（本机 / 免费托管如 Hugging Face Spaces）
@@ -128,7 +147,7 @@ env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV .venv/Scripts/python.exe -m pytes
 
 **你收搭建费，模型成本由客户承担**（详见 README「客户部署与成本转移」）。
 
-## 7. 常见问题
+## 8. 常见问题
 
 | 问题 | 解决 |
 |---|---|
