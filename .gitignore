@@ -9,7 +9,8 @@ __pycache__/
 security/credentials.json
 security/token.json
 
-# Virtual environment (nếu bạn sử dụng)
+# Virtual environments
+.venv/
 venv/
 env/
 
