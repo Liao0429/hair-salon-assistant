@@ -78,3 +78,28 @@ MIT License（保留原作者 [Hoanganhvu123/BookingGPT](https://github.com/Hoan
 - [ ] 用 OpenRouter/智谱实际跑通一次对话
 - [ ] 增加 Web/API 界面（FastAPI）便于客户使用
 - [ ] 增加 SQLite 备选存储（不依赖 Google Calendar）
+
+
+## 💰 客户部署与成本转移（OpenAI 标准形式）
+
+本项目模型层使用 **OpenAI 标准兼容接口**（`/v1/chat/completions`），因此**模型 API 成本可以完全转移给客户**：
+
+### 交付给客户的步骤
+1. 客户注册任一 OpenAI 兼容服务商并获取 API key（任选其一）：
+   - **OpenAI**：https://platform.openai.com/api-keys
+   - **OpenRouter**：https://openrouter.ai/keys （聚合多家模型，免绑卡可用免费模型）
+   - **DeepSeek / 智谱 / Moonshot** 等国内服务商
+2. 在客户的服务器/环境创建 `.env`：
+   ```bash
+   OPENAI_API_KEY=<客户自己的 key>
+   OPENAI_BASE_URL=https://api.openrouter.ai/api/v1   # 按客户选择的服务商
+   MODEL_NAME=gpt-4o-mini                             # 按客户选择的模型
+   ```
+3. 运行 `python main.py` → 所有 AI 调用走客户账户，**API 费用由客户承担**。
+
+### 你的角色
+- 你负责**搭建 + 配置 + 交付**，收一次性搭建费（$150-600）和可选月维护费。
+- 不承担模型 API 持续成本（客户自付 key 用量）。
+- 如需 Google Calendar 集成，同样用客户的 Google 账号 OAuth。
+
+> 这样你不需要维护任何模型服务器/API 额度，真正的"零成本交付"。
