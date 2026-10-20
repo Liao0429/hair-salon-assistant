@@ -1,7 +1,11 @@
+import sys
 import os
+# Ensure project root is on sys.path so `bookinggpt` is importable
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from bookinggpt.agent.booking_agent import BookingAgent
+
 
 load_dotenv()
 llm = ChatOpenAI(

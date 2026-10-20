@@ -69,7 +69,7 @@ def parse_ai_message_and_memory_to_tool_action(
         processed_input = llm.predict(f"Process this tool input: {tool_input}")
         
         # Add chat history to processed input
-        query = Query(ai_message=AIMessage(content=processed_input), chat_history=chat_history)
+        query = Query.model_construct(ai_message=AIMessage(content=processed_input), chat_history=chat_history)
 
         content_msg = f"responded: {message.content}\n" if message.content else "\n"
         log = f"\nInvoking: `{function_name}` with `{query}`\n{content_msg}\n"
@@ -146,3 +146,78 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# ---------------------------------------------------------------------------
+# Real pytest unit tests (no live LLM / network required)
+# ---------------------------------------------------------------------------
+
+class _FakePredictLLM:
+    """Minimal OpenAI-compatible stand-in with a predict() method."""
+
+    def __init__(self, output: str = "processed"):
+        self.output = output
+
+    def predict(self, text: str, **kwargs) -> str:
+        return self.output
+
+
+def test_parse_ai_message_without_tool_calls_returns_finish():
+    from langchain_core.messages import AIMessage
+
+    message = AIMessage(content="We have availability at 2 PM.")
+    query = Query.model_construct(ai_message=message, chat_history=[])
+    result = parse_ai_message_and_memory_to_tool_action(query, llm=_FakePredictLLM())
+    assert isinstance(result, AgentFinish)
+    assert result.return_values["output"] == "We have availability at 2 PM."
+
+
+def test_parse_ai_message_with_tool_calls_returns_actions():
+    from langchain_core.messages import AIMessage
+
+    message = AIMessage(
+        content="Let me book that for you.",
+        additional_kwargs={
+            "tool_calls": [
+                {
+                    "function": {
+                        "name": "calendar_tool",
+                        "arguments": '{"customer_name": "John Doe", "start_time": "2024-03-15T14:00:00"}',
+                    },
+                    "id": "call_123",
+                }
+            ]
+        },
+    )
+    query = Query.model_construct(ai_message=message, chat_history=[])
+    result = parse_ai_message_and_memory_to_tool_action(query, llm=_FakePredictLLM())
+    assert isinstance(result, list)
+    assert len(result) == 1
+    action = result[0]
+    assert action.tool == "calendar_tool"
+    assert action.tool_call_id == "call_123"
+
+
+def test_parse_invalid_tool_arguments_raises_output_parser_exception():
+    from langchain_core.messages import AIMessage
+    from langchain_core.exceptions import OutputParserException
+
+    message = AIMessage(
+        content="",
+        additional_kwargs={
+            "tool_calls": [
+                {
+                    "function": {
+                        "name": "calendar_tool",
+                        "arguments": "not-json",
+                    },
+                    "id": "call_bad",
+                }
+            ]
+        },
+    )
+    query = Query.model_construct(ai_message=message, chat_history=[])
+    try:
+        parse_ai_message_and_memory_to_tool_action(query, llm=_FakePredictLLM())
+    except OutputParserException:
+        return
+    raise AssertionError("Expected OutputParserException for invalid JSON arguments")
