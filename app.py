@@ -30,7 +30,14 @@ llm = ChatOpenAI(
     base_url=os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
     temperature=0.3,
 )
-booking_agent = BookingAgent(llm)
+# Per-session agents: each session_id gets its own agent with isolated memory.
+# Fixes H2 (previously all web visitors shared one global conversation memory).
+agents: dict[str, BookingAgent] = {}
+
+def get_agent(session_id: str) -> BookingAgent:
+    if session_id not in agents:
+        agents[session_id] = BookingAgent(llm)
+    return agents[session_id]
 
 class ChatMessage(BaseModel):
     message: str
@@ -43,7 +50,8 @@ async def index(request: Request):
 @app.post("/api/chat")
 async def chat(payload: ChatMessage):
     try:
-        reply = booking_agent.call_agent(payload.message)
+        agent = get_agent(payload.session_id)
+        reply = agent.call_agent(payload.message)
         return JSONResponse({"reply": reply})
     except Exception as e:
         return JSONResponse({"reply": f"Sorry, an error occurred: {str(e)[:200]}"}, status_code=500)

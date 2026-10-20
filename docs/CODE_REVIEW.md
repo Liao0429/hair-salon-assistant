@@ -19,13 +19,13 @@
 
 ## High（高优先级，应尽快修复）
 
-### H1. `bookinggpt/utils.py` 硬编码原作者本地路径
+### H1. `bookinggpt/utils.py` 硬编码原作者本地路径（✅ 已修复）
 - **位置**：`bookinggpt/utils.py` 第 3 行
 - **问题**：
   ```python
   CREDENTIALS_FILE = 'E:\\chatbot\\SaleGPT\\security\\credentials.json'
   ```
-  这是原作者开发机的绝对路径，在用户/客户机器上**必然不存在**。所有 Google Calendar 工具（create/available/cancel）都 import 这个常量，导致拿到项目后**日历功能必然报错**。
+  ~~这是原作者开发机的绝对路径~~ → 已改为 `BASE_DIR/security/credentials.json`（项目根相对路径），可移植。。所有 Google Calendar 工具（create/available/cancel）都 import 这个常量，导致拿到项目后**日历功能必然报错**。
 - **建议**：改为相对项目根目录的路径，例如：
   ```python
   import os
@@ -34,7 +34,7 @@
   TOKEN_FILE = os.path.join(BASE_DIR, "security", "token.json")
   ```
 
-### H2. Web 会话记忆全局共享（隐私/混淆风险）
+### H2. Web 会话记忆全局共享（隐私/混淆风险）（✅ 已修复）
 - **位置**：`app.py` 的 `ChatMessage.session_id` 字段 + `BookingAgent` 单实例
 - **问题**：`BookingAgent` 在 `app.py` 模块级只初始化一次，其内部 `ConversationBufferMemory` 是**单一全局对话历史**。`session_id` 字段接收了但完全没使用。结果是：**所有通过 Web 访问的顾客共享同一份对话记忆**——顾客 A 说"我叫张三"，顾客 B 说"我要预约"时，AI 会以为还是张三，造成信息串扰和隐私泄露。
 - **建议**：

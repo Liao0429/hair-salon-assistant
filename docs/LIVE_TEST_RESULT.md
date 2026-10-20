@@ -12,39 +12,35 @@
 
 Here's what we're rocking right now:
 
-🧼 **Hair wash** - 20 mins
-✂️ **Hair cut** - 30 mins  
-💇‍♀️ **Hair styling** - 30 mins
-🧔 **Beard trim** - 15 mins
-🎨 **Hair coloring** - 60 mins
-💆‍♀️ **Hair treatment** - 45 mins
-💆 **Scalp massage** - 15 mins
-👁️ **Eyebrow shaping** - 10 mins
-🧖‍♀️ **Facial** - 45 mins
-💅 **Manicure** - 30 mins
+1. 🧼 Hair wash (20 mins) - Fresh start for your locks!
+2. ✂️ Hair cut (30 mins) - Snip snip, looking fresh!
+3. 💇‍♀️ Hair styling (30 mins) - Slay that look!
+4. 🧔 Beard trim (15 mins) - Keep it sharp and tidy
+5. 🎨 Hair coloring (60 mins) - New color, new you!
+6. 💆‍♀️ Hair treatment (45 mins) - Pamper those strands
+7. 💆 Scalp massage (15 mins) - Pure relaxation vibes
+8. 👁️ Eyebrow shaping (10 mins) - Frame that face perfectly
+9. ✨ Facial (45 mins) - Glow up time!
+10. 💅 Manicure (30 mins) - Pretty hands, happy you!
 
-Whether you need a quick trim or a full-on pampering session, we've got something for everyone! 😎
-
-Feeling like treating yourself? I'd love to help you book an appointment! Just let me know what service you're interested in and when you'd like to come in. 📅✨[0m
+Any of those catching your eye? Or you feeling like mixing and matching a few? We'd love to hook you up with an appointment at Daisy Hair Salon! 😎💕[0m
 
 [1m> Finished chain.[0m
 AI: Hey there! 👋 Daisy Hair Salon's got you covered with all sorts of goodies! 💇‍♀️✨
 
 Here's what we're rocking right now:
 
-🧼 **Hair wash** - 20 mins
-✂️ **Hair cut** - 30 mins  
-💇‍♀️ **Hair styling** - 30 mins
-🧔 **Beard trim** - 15 mins
-🎨 **Hair coloring** - 60 mins
-💆‍♀️ **Hair treatment** - 45 mins
-💆 **Scalp massage** - 15 mins
-👁️ **Eyebrow shaping** - 10 mins
-🧖‍♀️ **Facial** - 45 mins
-💅 **Manicure** - 30 mins
+1. 🧼 Hair wash (20 mins) - Fresh start for your locks!
+2. ✂️ Hair cut (30 mins) - Snip snip, looking fresh!
+3. 💇‍♀️ Hair styling (30 mins) - Slay that look!
+4. 🧔 Beard trim (15 mins) - Keep it sharp and tidy
+5. 🎨 Hair coloring (60 mins) - New color, new you!
+6. 💆‍♀️ Hair treatment (45 mins) - Pamper those strands
+7. 💆 Scalp massage (15 mins) - Pure relaxation vibes
+8. 👁️ Eyebrow shaping (10 mins) - Frame that face perfectly
+9. ✨ Facial (45 mins) - Glow up time!
+10. 💅 Manicure (30 mins) - Pretty hands, happy you!
 
-Whether you need a quick trim or a full-on pampering session, we've got something for everyone! 😎
-
-Feeling like treating yourself? I'd love to help you book an appointment! Just let me know what service you're interested in and when you'd like to come in. 📅✨
+Any of those catching your eye? Or you feeling like mixing and matching a few? We'd love to hook you up with an appointment at Daisy Hair Salon! 😎💕
 
 ```
