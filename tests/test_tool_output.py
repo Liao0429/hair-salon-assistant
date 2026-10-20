@@ -1,3 +1,4 @@
+import os
 import json
 from json import JSONDecodeError
 from typing import List, Union, Dict
@@ -111,9 +112,9 @@ class ToolsAgentOutputParser(MultiActionAgentOutputParser):
 
 def main():
     # Example usage
-    from langchain_google_genai import ChatGoogleGenerativeAI
+    from langchain_openai import ChatOpenAI
     
-    llm = ChatGoogleGenerativeAI(model="gemini-pro")
+    llm = ChatOpenAI(model=os.getenv("MODEL_NAME","u2-flash"), api_key=os.getenv("OPENAI_API_KEY"), base_url=os.getenv("OPENAI_BASE_URL"))
     parser = ToolsAgentOutputParser(llm)
     
     # Simulating an AI message with tool calls

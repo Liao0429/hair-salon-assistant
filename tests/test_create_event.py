@@ -11,7 +11,7 @@ from googleapiclient.errors import HttpError
 from pydantic import BaseModel, Field
 from langchain.tools import BaseTool
 from langchain.agents import create_tool_calling_agent
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from typing import Optional
@@ -155,11 +155,12 @@ class CalendarTool(BaseTool):
             partial_variables={"format_instructions": parser.get_format_instructions()}
         )
 
-        llm = ChatGoogleGenerativeAI(
-            model="gemini-1.5-pro",
-            temperature=0,
-            google_api_key=GOOGLE_API_KEY
-        )
+        llm = ChatOpenAI(
+        model=os.getenv("MODEL_NAME", "u2-flash"),
+        api_key=os.getenv("OPENAI_API_KEY"),
+        base_url=os.getenv("OPENAI_BASE_URL"),
+        temperature=0
+    )
         chain = prompt | llm | parser
 
         current_time = datetime.datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
@@ -175,7 +176,7 @@ class CalendarTool(BaseTool):
     
 
 def main():
-    llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0, google_api_key=GOOGLE_API_KEY)
+    llm = ChatOpenAI(model=os.getenv("MODEL_NAME","u2-flash"), api_key=os.getenv("OPENAI_API_KEY"), base_url=os.getenv("OPENAI_BASE_URL"), temperature=0)
     calendar_tool = CalendarTool()
     tools = [calendar_tool]
 

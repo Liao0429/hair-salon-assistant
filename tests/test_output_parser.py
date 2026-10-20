@@ -1,7 +1,7 @@
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 import os
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
@@ -44,7 +44,7 @@ prompt = PromptTemplate(
 )
 
 # Initialize the language model
-model = ChatGoogleGenerativeAI(model="gemini-1.5-pro", temperature=0.7, google_api_key=GOOGLE_API_KEY)
+model = ChatOpenAI(model=os.getenv("MODEL_NAME","u2-flash"), api_key=os.getenv("OPENAI_API_KEY"), base_url=os.getenv("OPENAI_BASE_URL"), temperature=0.7)
 
 # Create the chain
 chain = prompt | model | parser

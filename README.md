@@ -103,3 +103,17 @@ MIT License（保留原作者 [Hoanganhvu123/BookingGPT](https://github.com/Hoan
 - 如需 Google Calendar 集成，同样用客户的 Google 账号 OAuth。
 
 > 这样你不需要维护任何模型服务器/API 额度，真正的"零成本交付"。
+
+
+## ✅ 验证记录（2026-10-21）
+
+- **环境**：Python 3.12 venv，依赖已安装
+- **模型**：ofm 本地免费网关（OpenAI 兼容 `http://127.0.0.1:18900/v1`，模型 `kilo-auto/free`）
+- **结果**：AI 预约助手可正常对话——能列出服务清单、引导客户提供预约信息、调用工具订位/查时段/取消
+- **单元测试**：`pytest` 全部通过
+- **注意**：交付客户时，将 `.env` 的 `OPENAI_API_KEY` / `OPENAI_BASE_URL` / `MODEL_NAME` 换成客户自己的 OpenAI/OpenRouter key 即可（成本转嫁客户）
+
+### 现场对话验证
+```bash
+.venv/Scripts/python.exe examples/live_test.py
+```
