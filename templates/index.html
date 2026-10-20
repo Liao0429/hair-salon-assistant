@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daisy Salon AI Assistant</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background:#f5f0eb; height:100vh; display:flex; justify-content:center; align-items:center; }
+  .app { width:100%; max-width:480px; height:100vh; max-height:800px; background:#fff; display:flex; flex-direction:column; border-radius:16px; box-shadow:0 10px 40px rgba(0,0,0,.12); overflow:hidden; }
+  header { background:#2d1b14; color:#fff; padding:14px 18px; display:flex; align-items:center; justify-content:space-between; }
+  .brand { display:flex; align-items:center; gap:10px; }
+  .logo { width:38px; height:38px; background:#e8b89b; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; }
+  .brand h1 { font-size:15px; font-weight:600; }
+  .brand p { font-size:11px; opacity:.8; }
+  .lang { background:#4a2f22; border:none; color:#fff; padding:6px 10px; border-radius:20px; font-size:12px; cursor:pointer; }
+  .messages { flex:1; padding:16px; overflow-y:auto; background:#faf7f4; display:flex; flex-direction:column; gap:12px; }
+  .msg { max-width:80%; padding:10px 14px; border-radius:16px; font-size:14px; line-height:1.5; white-space:pre-wrap; }
+  .bot { align-self:flex-start; background:#fff; border:1px solid #eee; border-top-left-radius:4px; }
+  .user { align-self:flex-end; background:#2d1b14; color:#fff; border-top-right-radius:4px; }
+  .inputbar { display:flex; gap:8px; padding:12px; background:#fff; border-top:1px solid #eee; }
+  .inputbar input { flex:1; padding:12px 14px; border:1px solid #ddd; border-radius:24px; font-size:14px; outline:none; }
+  .inputbar input:focus { border-color:#2d1b14; }
+  .send { background:#2d1b14; color:#fff; border:none; border-radius:24px; padding:0 20px; font-size:14px; cursor:pointer; }
+  .send:hover { background:#4a2f22; }
+  .typing { font-style:italic; opacity:.6; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="logo">💇‍♀️</div>
+      <div>
+        <h1 data-i18n="brandName">Daisy Salon AI Assistant</h1>
+        <p data-i18n="brandSub">Book appointments easily — 24/7</p>
+      </div>
+    </div>
+    <select class="lang" id="langSelect">
+      <option value="en">English</option>
+      <option value="zh">中文</option>
+      <option value="es">Español</option>
+    </select>
+  </header>
+
+  <div class="messages" id="messages"></div>
+
+  <div class="inputbar">
+    <input id="msgInput" type="text" data-i18n-placeholder="inputPlaceholder" placeholder="Type your message..." autocomplete="off">
+    <button class="send" id="sendBtn" data-i18n="sendBtn">Send</button>
+  </div>
+</div>
+
+<script>
+// ---------- i18n ----------
+const I18N = {
+  en: {
+    brandName: "Daisy Salon AI Assistant",
+    brandSub: "Book appointments easily — 24/7",
+    inputPlaceholder: "Type your message...",
+    sendBtn: "Send",
+    welcome: "Hello! 👋 Welcome to Daisy Salon. I can help you book, check, or cancel an appointment.\n\nWhat service would you like today?",
+    placeholderSamples: ["Try: Book a haircut tomorrow at 10am", "Try: What services do you offer?"]
+  },
+  zh: {
+    brandName: "黛西美发店 AI 助手",
+    brandSub: "轻松预约 — 24 小时在线",
+    inputPlaceholder: "输入你的消息...",
+    sendBtn: "发送",
+    welcome: "你好！👋 欢迎来到黛西美发店。我可以帮你预约、查询或取消预约。\n\n今天想做什么服务呢？",
+    placeholderSamples: ["试试：我想明天上午10点预约剪发", "试试：你们有什么服务？"]
+  },
+  es: {
+    brandName: "Asistente de Daisy Salon",
+    brandSub: "Reserva citas fácilmente — 24/7",
+    inputPlaceholder: "Escribe tu mensaje...",
+    sendBtn: "Enviar",
+    welcome: "¡Hola! 👋 Bienvenido a Daisy Salon. Puedo ayudarte a reservar, consultar o cancelar una cita.\n\n¿Qué servicio te gustaría hoy?",
+    placeholderSamples: ["Prueba: Reservar un corte mañana a las 10", "Prueba: ¿Qué servicios ofrecen?"]
+  }
+};
+let currentLang = 'en';
+
+function applyLang(lang) {
+  const t = I18N[lang] || I18N.en;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t[el.getAttribute('data-i18n')] || el.textContent;
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t[el.getAttribute('data-i18n-placeholder')] || el.placeholder;
+  });
+}
+
+// ---------- chat ----------
+const messagesEl = document.getElementById('messages');
+const inputEl = document.getElementById('msgInput');
+const sendBtn = document.getElementById('sendBtn');
+
+function addMessage(text, from) {
+  const div = document.createElement('div');
+  div.className = 'msg ' + from;
+  div.textContent = text;
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function showTyping() {
+  const div = document.createElement('div');
+  div.className = 'msg bot typing';
+  div.id = 'typing';
+  div.textContent = '...';
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+function hideTyping() {
+  const t = document.getElementById('typing');
+  if (t) t.remove();
+}
+
+async function send() {
+  const text = inputEl.value.trim();
+  if (!text) return;
+  addMessage(text, 'user');
+  inputEl.value = '';
+  showTyping();
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ message: text, session_id: 'web' })
+    });
+    const data = await res.json();
+    hideTyping();
+    addMessage(data.reply || '...', 'bot');
+  } catch (e) {
+    hideTyping();
+    addMessage('Error connecting. Please try again.', 'bot');
+  }
+}
+
+sendBtn.addEventListener('click', send);
+inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+
+// ---------- init ----------
+applyLang('en');
+addMessage(I18N.en.welcome, 'bot');
+document.getElementById('langSelect').addEventListener('change', function() {
+  currentLang = this.value;
+  applyLang(currentLang);
+  // show a localized welcome when switching, if conversation is empty
+  if (messagesEl.children.length <= 1) {
+    messagesEl.replaceChildren();
+    addMessage(I18N[currentLang].welcome, 'bot');
+  }
+});
+</script>
+</body>
+</html>

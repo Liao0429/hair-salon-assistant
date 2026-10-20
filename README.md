@@ -105,6 +105,30 @@ MIT License（保留原作者 [Hoanganhvu123/BookingGPT](https://github.com/Hoan
 > 这样你不需要维护任何模型服务器/API 额度，真正的"零成本交付"。
 
 
+
+## 🌐 Web 界面（作品集 / Gig 演示）
+
+本项目带一个**面向小白客户的聊天 Web 界面**（FastAPI + 前端）：
+- **默认英文**，支持 **English / 中文 / Español** 一键切换
+- 对话式预约：客户像用微信一样打字，AI 自动回复、查时段、预约
+- 零配置：打开网页就能用
+
+### 演示截图
+![Daisy Salon AI Assistant Demo](docs/demo.png)
+
+### 运行 Web 界面
+```bash
+pip install -r requirements.txt
+# 配置 .env（模型 key）
+.venv/Scripts/python.exe -m uvicorn app:app --host 127.0.0.1 --port 8000
+# 浏览器打开 http://localhost:8000
+```
+
+## 🎯 项目定位
+- **作品集**：展示 AI Agent 搭建能力（LangChain + 工具调用 + Web 界面）
+- **Fiverr Gig 演示**：接"AI 预约助手 / AI Chatbot"单时，直接演示这个成品
+- **GitHub 开源**：可二次开发，MIT 许可
+
 ## ✅ 验证记录（2026-10-21）
 
 - **环境**：Python 3.12 venv，依赖已安装
