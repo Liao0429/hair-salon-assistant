@@ -1,112 +1,80 @@
-# Daisy Hair Salon Booking System 🌼💇‍♀️
+# AI Hair Salon Booking Assistant 💇‍♀️🤖
 
-Welcome to the Daisy Hair Salon booking system! This is a smart application using AI to help customers easily book and manage appointments at our salon.
+> **本项目基于 [BookingGPT](https://github.com/Hoanganhvu123/BookingGPT)（MIT 许可）二次开发**：
+> 将原模型层从 Google Gemini 替换为 **OpenAI 兼容接口**（OpenRouter / 智谱 / 任意 `/v1` 端点），精简依赖并整理为符合 GitHub 规范的维护结构。
 
 ## 🌟 Key Features
 
-- 🤖 Intelligent AI assistant to interact with customers
-- 📅 Integration with Google Calendar for appointment management
-- ⏰ Check and display available time slots
-- 📝 Create, view, and cancel appointments easily
-- 🗣️ Support for English communication
-- 😊 Friendly and natural communication with customers
+- 🤖 AI 对话式预约助手（订位 / 查时段 / 取消）
+- 📅 Google Calendar 集成（预约自动写入日历）
+- 💬 自然语言交互，收集姓名 / 电话 / 服务 / 时间
+- 🔌 **模型无关**：任何 OpenAI 兼容 API 均可驱动（OpenRouter、智谱、DeepSeek、客户自带 key）
 
-## 🛠️ Technologies Used
+## 🛠️ Tech Stack
 
-- Python 3.11
-- LangChain for creating AI agent
-- Google Generative AI (Gemini 1.5 Flash model)
-- Google Calendar API for appointment management
-- Poetry for dependency management
-- Docker for containerization (if deployment is needed)
+- Python 3.11+
+- LangChain（Agent + Tool Calling）
+- **OpenAI 兼容模型层**（可替换）
+- Google Calendar API
 
 ## 🏗️ Project Structure
 
 ```
-bookinggpt/
-├── agent/
+hair-salon-assistant/
+├── bookinggpt/
+│   ├── agent/            # Agent 与 Prompt 定义
+│   │   ├── booking_agent.py
+│   │   └── prompt.py
+│   ├── tool/             # 工具：创建/查时段/取消预约
+│   │   ├── create_event.py
+│   │   ├── available_event.py
+│   │   └── cancel_event.py
 │   ├── __init__.py
-│   ├── booking_agent.py
-│   └── prompt.py
-├── tool/
-│   ├── __init__.py
-│   ├── available_event.py
-│   ├── cancel_event.py
-│   └── create_event.py
-├── __init__.py
-└── utils.py
-tests/
-├── __init__.py
-├── test_available_event.py
-├── test_cancel_event.py
-├── test_create_event.py
-├── test_output_parser.py
-└── test_tool_output.py
-main.py
-README.md
-.env
-.gitignore
-Dockerfile
-pyproject.toml
-requirements.txt
+│   └── utils.py
+├── security/            # Google Calendar 凭据（.example）
+├── tests/               # 单元测试
+├── main.py              # CLI 入口
+├── requirements.txt   # 核心依赖
+├── README.md
+├── LICENSE             # MIT（原作者许可）
+└── .gitignore
 ```
 
-## 🚀 Installation and Usage
+## 🚀 安装与运行
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/daisy-hair-salon-booking.git
-   cd daisy-hair-salon-booking
-   ```
+### 1. 克隆与安装依赖
+```bash
+git clone <your-fork-url> hair-salon-assistant
+cd hair-salon-assistant
+pip install -r requirements.txt
+```
 
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+### 2. 配置环境变量（`.env`）
+```bash
+# 模型（OpenAI 兼容）
+OPENAI_API_KEY=your_key_here
+OPENAI_BASE_URL=https://api.openrouter.ai/api/v1   # 或智谱/DeepSeek/其他
+MODEL_NAME=gpt-4o-mini                            # 按你的模型改
 
-3. Configure environment variables in the `.env` file:
-   ```bash
-   GOOGLE_API_KEY=your_google_api_key_here
-   ```
+# Google Calendar（可选，用于写日历）
+GOOGLE_API_KEY=your_google_api_key_here
+```
+将 `security/credentials.json.example` 复制为 `security/credentials.json` 并填入 OAuth 凭据（如需 Google Calendar 集成）。
 
-4. Run the application:
-   ```bash
-   python main.py
-   ```
+### 3. 运行
+```bash
+python main.py
+```
 
-5. Interact with the AI assistant to book appointments, check available time slots, or cancel appointments.
+## 🧪 测试
+```bash
+pytest
+```
 
-## 📝 Usage Instructions
+## 📄 许可
+MIT License（保留原作者 [Hoanganhvu123/BookingGPT](https://github.com/Hoanganhvu123/BookingGPT) 版权）。
 
-- To book an appointment: "I want to book a haircut tomorrow at 2 PM"
-- To check available time slots: "Show me the available slots for this week"
-- To cancel an appointment: "I want to cancel the appointment with booking code ABC123"
-
-## 💈 Our Services
-
-1. Hair wash (20 minutes)
-2. Haircut (30 minutes)
-3. Hair styling (30 minutes)
-4. Beard trim (15 minutes)
-5. Hair coloring (60 minutes)
-6. Hair treatment (45 minutes)
-7. Scalp massage (15 minutes)
-8. Eyebrow shaping (10 minutes)
-9. Facial care (45 minutes)
-10. Manicure (30 minutes)
-
-## 🤝 Contributions
-
-We welcome all contributions to improve this project. Please create a pull request or report issues if you have any ideas or encounter any problems.
-
-## 📄 License
-
-This project is distributed under the MIT License. See the `LICENSE` file for more details.
-
-## 📞 Contact
-
-If you have any questions or suggestions, please contact us via email: hoanganvu933@gmail.com
-
----
-
-Thank you for your interest in the Daisy Hair Salon Booking System! We hope this application will provide you with a wonderful booking experience. 💖✨
+## 📌 二次开发待办
+- [ ] 用 OpenRouter/智谱实际跑通一次对话
+- [ ] 增加 Web/API 界面（FastAPI）便于客户使用
+- [ ] 增加 SQLite 备选存储（不依赖 Google Calendar）
