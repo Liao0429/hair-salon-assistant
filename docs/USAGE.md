@@ -74,11 +74,25 @@ env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV .venv/Scripts/python.exe view_boo
 ```
 输出示例：
 ```
-共 2 条预约：
+共 4 条预约（总 4 条）
 
-  [confirmed] 2026-10-22 10:00 | Liao | Hair cut | code=TEST123 | 电话:123456
-  [cancelled] 2026-10-23 14:00 | Amy | Hair coloring | code=TEST456 | 电话:654321
+状态          | 预约时间             | 姓名  | 服务            | 电话          | 预约码
+------------+------------------+-----+---------------+-------------+-----
+✅ confirmed | 2026-10-22 10:00 | 张伟  | Hair cut      | 13800001111 | A111
+❌ cancelled | 2026-10-23 09:00 | 李娜  | Hair wash     | 13700003333 | C333
 ```
+
+#### 筛选参数
+
+| 参数 | 说明 | 示例 |
+|---|---|---|
+| `--status confirmed` | 只看已确认 | `view_bookings.py --status confirmed` |
+| `--status cancelled` | 只看已取消 | `view_bookings.py --status cancelled` |
+| `--search 张` | 按姓名/电话/服务/预约码搜索 | `view_bookings.py --search 张` |
+| `--service "Hair cut"` | 按服务名称筛选 | `view_bookings.py --service "Hair cut"` |
+| `--code ABC123` | 按预约码查详情 | `view_bookings.py --code ABC123` |
+| `--date 2026-10-22` | 按日期筛选 | `view_bookings.py --date 2026-10-22` |
+| `--today` | 只看今天 | `view_bookings.py --today` |
 
 > `booking.db` 已被 `.gitignore` 排除（属于运行数据，不入库）。
 
