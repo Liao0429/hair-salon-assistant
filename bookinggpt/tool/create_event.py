@@ -21,6 +21,7 @@ from langchain.prompts import ChatPromptTemplate
 
 from bookinggpt.utils import SCOPES, CREDENTIALS_FILE, TOKEN_FILE
 from bookinggpt.agent.prompt import PROMPT_TEMPLATE
+from bookinggpt.storage import create_booking
 
 # Load environment variables
 load_dotenv()
@@ -85,25 +86,40 @@ class CalendarTool(BaseTool):
         return creds
 
     def create_event(self, event_info: EventInfo, current_time: datetime.datetime):
+        # 1) Persist to local SQLite first (zero-config, works without Google credentials)
         try:
-            creds = self.get_credentials()
-            if not creds:
-                return "Unable to obtain valid credentials."
-
-            service = build("calendar", "v3", credentials=creds)
-
             start_time = current_time.replace(
                 hour=int(event_info.start_time.split(":")[0]),
                 minute=int(event_info.start_time.split(":")[1]),
                 second=0,
                 microsecond=0
             ) + datetime.timedelta(days=1)
-            end_time = current_time.replace(
+            event_time_str = start_time.strftime("%Y-%m-%d %H:%M")
+            create_booking(
+                booking_code=event_info.booking_code,
+                customer_name=event_info.customer_name,
+                phone=event_info.customer_phone,
+                service=event_info.customer_service,
+                event_time=event_time_str,
+            )
+        except Exception as e:
+            return f"Failed to save booking locally: {e}"
+
+        # 2) Try Google Calendar sync (optional; does not block local persistence)
+        try:
+            creds = self.get_credentials()
+            if not creds:
+                return (f"Booking {event_info.booking_code} saved locally. "
+                        "Google Calendar sync unavailable (no credentials).")
+
+            service = build("calendar", "v3", credentials=creds)
+
+            end_time = start_time.replace(
                 hour=int(event_info.end_time.split(":")[0]),
                 minute=int(event_info.end_time.split(":")[1]),
                 second=0,
                 microsecond=0
-            ) + datetime.timedelta(days=1)
+            )
 
             event = {
                 'summary': f"{event_info.customer_name} - {event_info.customer_service}",
@@ -121,12 +137,13 @@ class CalendarTool(BaseTool):
             }
 
             event = service.events().insert(calendarId='primary', body=event).execute()
-            return (f"Event created successfully. "
+            return (f"Booking confirmed. "
                     f"Booking code: {event_info.booking_code}, "
                     f"Event ID: {event.get('id')}")
 
         except HttpError as error:
-            return f"An error occurred: {error}"
+            return (f"Booking {event_info.booking_code} saved locally. "
+                    f"Google Calendar sync skipped: {error}")
 
     def _run(self, query: str) -> str:
         parser = PydanticOutputParser(pydantic_object=EventInfo)

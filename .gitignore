@@ -35,3 +35,6 @@ tests/token.json
 # Uvicorn temp pid
 .uvicorn_pid
 
+# Local booking database (runtime data)
+booking.db
+

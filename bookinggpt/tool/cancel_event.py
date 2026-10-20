@@ -8,6 +8,7 @@ from googleapiclient.errors import HttpError
 from langchain.tools import BaseTool
 
 from bookinggpt.utils import SCOPES, CREDENTIALS_FILE, TOKEN_FILE
+from bookinggpt.storage import cancel_booking
 
 class CancelEventTool(BaseTool):
     name = "cancel_event_tool"
@@ -48,14 +49,20 @@ class CancelEventTool(BaseTool):
         return creds
 
     def cancel_event(self, booking_code: str, customer_phone: str):
+        # 1) Update local SQLite first (zero-config)
+        try:
+            cancel_booking(booking_code, customer_phone)
+        except Exception as e:
+            return f"Failed to cancel booking locally: {e}"
+
+        # 2) Try Google Calendar deletion (optional)
         try:
             creds = self.get_credentials()
             if not creds:
-                return "Unable to obtain valid credentials."
+                return (f"Booking {booking_code} cancelled locally. "
+                        "Google Calendar sync unavailable (no credentials).")
 
             service = build("calendar", "v3", credentials=creds)
-
-            # Search for the event
             events_result = service.events().list(calendarId='primary', q=booking_code).execute()
             events = events_result.get('items', [])
 
@@ -63,14 +70,16 @@ class CancelEventTool(BaseTool):
                 description = event.get('description', '')
                 if (f"Booking Code: {booking_code}" in description and
                     f"Phone: {customer_phone}" in description):
-                    # Cancel the event
                     service.events().delete(calendarId='primary', eventId=event['id']).execute()
-                    return f"Event with booking code {booking_code} has been successfully canceled."
+                    return (f"Booking {booking_code} cancelled. "
+                            f"Event {event['id']} removed from calendar.")
 
-            return f"No event found with booking code {booking_code} and phone number {customer_phone}. lets try again or check the booking code again"
+            return (f"Booking {booking_code} cancelled locally. "
+                    f"Google Calendar event not found for code {booking_code}.")
 
         except HttpError as error:
-            return f"An error occurred: {error}"
+            return (f"Booking {booking_code} cancelled locally. "
+                    f"Google Calendar sync skipped: {error}")
 
     def _run(self, query: str) -> str:
         try:

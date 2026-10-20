@@ -59,6 +59,29 @@ OPENAI_BASE_URL=http://127.0.0.1:18900/v1
 MODEL_NAME=kilo-auto/free
 ```
 
+
+## 3.5 预约信息存储（SQLite，零配置）
+
+预约信息**自动保存到本地 SQLite 数据库**：`G:\hair-salon-assistant\booking.db`。
+- 无需配置任何外部服务，预约即落盘
+- 每次预约生成一个 `booking_code`（如 `A1B2C3D4`），用于取消/查询
+- Google Calendar 是**可选**同步（未配置时，预约仍保存在本地）
+
+### 查看预约列表
+```bash
+cd /g/hair-salon-assistant
+env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV .venv/Scripts/python.exe view_bookings.py
+```
+输出示例：
+```
+共 2 条预约：
+
+  [confirmed] 2026-10-22 10:00 | Liao | Hair cut | code=TEST123 | 电话:123456
+  [cancelled] 2026-10-23 14:00 | Amy | Hair coloring | code=TEST456 | 电话:654321
+```
+
+> `booking.db` 已被 `.gitignore` 排除（属于运行数据，不入库）。
+
 ## 4. 配置 Google Calendar（可选，用于真实日历同步）
 
 1. 到 Google Cloud Console 创建 OAuth 凭据（桌面应用），下载 `credentials.json`
