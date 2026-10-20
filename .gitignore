@@ -32,3 +32,6 @@ Thumbs.db
 # Test token file
 tests/token.json
 
+# Uvicorn temp pid
+.uvicorn_pid
+
