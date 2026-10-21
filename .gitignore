@@ -38,3 +38,6 @@ tests/token.json
 # Local booking database (runtime data)
 booking.db
 
+
+# Hermes working files
+.hermes/
