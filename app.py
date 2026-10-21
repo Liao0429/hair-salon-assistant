@@ -55,7 +55,11 @@ async def chat(payload: ChatMessage):
         reply = agent.call_agent(payload.message)
         return JSONResponse({"reply": reply})
     except Exception as e:
-        return JSONResponse({"reply": f"Sorry, an error occurred: {str(e)[:200]}"}, status_code=500)
+        # Degraded mode: tell frontend AI is unavailable (rate limit / error) so it can offer fallback form.
+        return JSONResponse(
+            {"reply": f"Sorry, an error occurred: {str(e)[:200]}", "degraded": True},
+            status_code=500,
+        )
 
 @app.get("/api/health")
 async def health():
@@ -130,3 +134,32 @@ def bookings_page():
 </body>
 </html>"""
     return HTMLResponse(html)
+
+
+# ===== 无模型保底预约接口（模型限速/不可用时，顾客直接表单预约，写入 booking.db） =====
+import random
+import string
+from bookinggpt.storage import create_booking as storage_create_booking
+
+class BookingForm(BaseModel):
+    customer_name: str
+    phone: str
+    service: str
+    date: str  # YYYY-MM-DD
+    time: str  # HH:MM
+
+@app.post("/api/booking")
+async def create_booking_api(payload: BookingForm):
+    try:
+        code = "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        event_time = f"{payload.date} {payload.time}"
+        storage_create_booking(
+            booking_code=code,
+            customer_name=payload.customer_name,
+            phone=payload.phone,
+            service=payload.service,
+            event_time=event_time,
+        )
+        return {"booking_code": code, "status": "confirmed", "message": f"Booking {code} created."}
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)

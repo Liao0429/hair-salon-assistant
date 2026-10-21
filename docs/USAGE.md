@@ -154,6 +154,17 @@ env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV .venv/Scripts/python.exe -m pytes
 
 **你收搭建费，模型成本由客户承担**（详见 README「客户部署与成本转移」）。
 
+
+### 无模型保底预约（模型限速/不可用时）
+当 AI 模型被限速或不可用时，顾客仍可通过**快速预约表单**完成预约（**不调用 AI 模型**）：
+
+- 聊天界面下方有 **"📋 Quick Booking / 快速预约"** 折叠面板
+- 填写：姓名 / 电话 / 服务 / 日期 / 时间
+- 点击 **Book Now / 立即预约** → 直接写入 `booking.db`，返回 booking code
+- 当 AI 回复错误时，前端会自动提示并展开此表单
+
+后端接口：`POST /api/booking`（无模型依赖，生成 booking code + 写入 SQLite）。
+
 ## 8. 常见问题
 
 | 问题 | 解决 |

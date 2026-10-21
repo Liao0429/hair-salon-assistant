@@ -24,6 +24,15 @@
   .send { background:#2d1b14; color:#fff; border:none; border-radius:24px; padding:0 20px; font-size:14px; cursor:pointer; }
   .send:hover { background:#4a2f22; }
   .typing { font-style:italic; opacity:.6; }
+  .quickbook { border-top:1px solid #eee; background:#faf7f4; padding:6px 12px; }
+  .qb-toggle { width:100%; background:none; border:none; color:#6a11cb; font-size:12px; font-weight:600; cursor:pointer; padding:6px 0; text-align:left; }
+  .qb-body { padding:6px 0 4px; }
+  .qb-row { margin-bottom:6px; }
+  .qb-row input, .qb-row select { width:100%; padding:9px 10px; border:1px solid #ddd; border-radius:10px; font-size:13px; outline:none; }
+  .qb-row-inline { display:flex; gap:6px; }
+  .qb-row-inline input { flex:1; }
+  .qb-submit { width:100%; background:#2d1b14; color:#fff; border:none; border-radius:12px; padding:10px; font-size:14px; cursor:pointer; }
+  .qb-result { margin-top:6px; font-size:13px; font-weight:600; min-height:16px; color:#1a8f4a; }
 </style>
 </head>
 <body>
@@ -45,6 +54,29 @@
 
   <div class="messages" id="messages"></div>
 
+  <div class="quickbook" id="quickbookPanel">
+    <button class="qb-toggle" id="qbToggle">📋 Quick Booking / 快速预约 <span id="qbArrow">▾</span></button>
+    <div class="qb-body" id="qbBody" style="display:none">
+      <div class="qb-row"><input id="qbName" placeholder="Name / 姓名" autocomplete="off"></div>
+      <div class="qb-row"><input id="qbPhone" placeholder="Phone / 电话" autocomplete="off"></div>
+      <div class="qb-row">
+        <select id="qbService">
+          <option value="Hair wash">Hair wash / 洗头</option>
+          <option value="Hair cut">Hair cut / 剪发</option>
+          <option value="Hair styling">Hair styling / 造型</option>
+          <option value="Hair coloring">Hair coloring / 染发</option>
+          <option value="Beard trim">Beard trim / 修胡</option>
+          <option value="Manicure">Manicure / 美甲</option>
+        </select>
+      </div>
+      <div class="qb-row qb-row-inline">
+        <input id="qbDate" type="date">
+        <input id="qbTime" type="time" value="10:00">
+      </div>
+      <button class="qb-submit" id="qbSubmit">Book Now / 立即预约</button>
+      <div class="qb-result" id="qbResult"></div>
+    </div>
+  </div>
   <div class="inputbar">
     <input id="msgInput" type="text" data-i18n-placeholder="inputPlaceholder" placeholder="Type your message..." autocomplete="off">
     <button class="send" id="sendBtn" data-i18n="sendBtn">Send</button>
@@ -131,12 +163,56 @@ async function send() {
     });
     const data = await res.json();
     hideTyping();
-    addMessage(data.reply || '...', 'bot');
+    if (!res.ok || data.degraded) {
+      addMessage("⚠️ AI service is busy (model rate-limited). Please use the Quick Booking form below.\n模型繁忙，请用下方快速预约表单。", 'bot');
+      document.getElementById('qbBody').style.display = 'block';
+      document.getElementById('qbArrow').textContent = '▴';
+    } else {
+      addMessage(data.reply || '...', 'bot');
+    }
   } catch (e) {
     hideTyping();
     addMessage('Error connecting. Please try again.', 'bot');
   }
 }
+
+// ---------- quick booking fallback (no AI needed) ----------
+document.getElementById('qbToggle').addEventListener('click', function() {
+  const b = document.getElementById('qbBody');
+  b.style.display = b.style.display === 'none' ? 'block' : 'none';
+  document.getElementById('qbArrow').textContent = b.style.display === 'none' ? '▾' : '▴';
+});
+document.getElementById('qbSubmit').addEventListener('click', async function() {
+  const resEl = document.getElementById('qbResult');
+  const payload = {
+    customer_name: document.getElementById('qbName').value.trim(),
+    phone: document.getElementById('qbPhone').value.trim(),
+    service: document.getElementById('qbService').value,
+    date: document.getElementById('qbDate').value,
+    time: document.getElementById('qbTime').value
+  };
+  if (!payload.customer_name || !payload.phone || !payload.date) {
+    resEl.textContent = '⚠️ Please fill name, phone and date.';
+    resEl.style.color = '#d93b3b';
+    return;
+  }
+  resEl.textContent = 'Booking...';
+  resEl.style.color = '#888';
+  try {
+    const r = await fetch('/api/booking', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+    const d = await r.json();
+    if (d.booking_code) {
+      resEl.textContent = '✅ Booked! Your code: ' + d.booking_code;
+      resEl.style.color = '#1a8f4a';
+    } else {
+      resEl.textContent = 'Error: ' + (d.error || 'unknown');
+      resEl.style.color = '#d93b3b';
+    }
+  } catch(e) {
+    resEl.textContent = 'Error connecting.';
+    resEl.style.color = '#d93b3b';
+  }
+});
 
 sendBtn.addEventListener('click', send);
 inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
