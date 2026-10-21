@@ -3,45 +3,61 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Daisy Salon AI Assistant</title>
+<title>Daisy Salon</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background:#f5f0eb; height:100vh; display:flex; justify-content:center; align-items:center; }
-  .app { width:100%; max-width:480px; height:100vh; max-height:800px; background:#fff; display:flex; flex-direction:column; border-radius:16px; box-shadow:0 10px 40px rgba(0,0,0,.12); overflow:hidden; }
-  header { background:#2d1b14; color:#fff; padding:14px 18px; display:flex; align-items:center; justify-content:space-between; }
-  .brand { display:flex; align-items:center; gap:10px; }
-  .logo { width:38px; height:38px; background:#e8b89b; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; }
-  .brand h1 { font-size:15px; font-weight:600; }
-  .brand p { font-size:11px; opacity:.8; }
-  .lang { background:#4a2f22; border:none; color:#fff; padding:6px 10px; border-radius:20px; font-size:12px; cursor:pointer; }
-  .messages { flex:1; padding:16px; overflow-y:auto; background:#faf7f4; display:flex; flex-direction:column; gap:12px; }
-  .msg { max-width:80%; padding:10px 14px; border-radius:16px; font-size:14px; line-height:1.5; white-space:pre-wrap; }
-  .bot { align-self:flex-start; background:#fff; border:1px solid #eee; border-top-left-radius:4px; }
-  .user { align-self:flex-end; background:#2d1b14; color:#fff; border-top-right-radius:4px; }
-  .inputbar { display:flex; gap:8px; padding:12px; background:#fff; border-top:1px solid #eee; }
-  .inputbar input { flex:1; padding:12px 14px; border:1px solid #ddd; border-radius:24px; font-size:14px; outline:none; }
-  .inputbar input:focus { border-color:#2d1b14; }
-  .send { background:#2d1b14; color:#fff; border:none; border-radius:24px; padding:0 20px; font-size:14px; cursor:pointer; }
-  .send:hover { background:#4a2f22; }
-  .typing { font-style:italic; opacity:.6; }
-  .quickbook { border-top:1px solid #eee; background:#faf7f4; padding:6px 12px; }
-  .qb-toggle { width:100%; background:none; border:none; color:#6a11cb; font-size:12px; font-weight:600; cursor:pointer; padding:6px 0; text-align:left; }
-  .qb-body { padding:6px 0 4px; }
-  .qb-row { margin-bottom:6px; }
-  .qb-row input, .qb-row select { width:100%; padding:9px 10px; border:1px solid #ddd; border-radius:10px; font-size:13px; outline:none; }
-  .qb-row-inline { display:flex; gap:6px; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: linear-gradient(145deg, #f7efe8 0%, #efe3d8 50%, #faf5f0 100%); height:100vh; display:flex; justify-content:center; align-items:center; }
+  .app { width:100%; max-width:480px; height:100vh; max-height:820px; background:#fffdfb; display:flex; flex-direction:column; border-radius:22px; box-shadow:0 12px 48px rgba(45,27,20,.14), 0 0 0 1px rgba(45,27,20,.04); overflow:hidden; }
+
+  header { background: linear-gradient(135deg, #2d1b14, #6b4230); color:#fff; padding:16px 18px; display:flex; align-items:center; justify-content:space-between; }
+  .brand { display:flex; align-items:center; gap:11px; }
+  .logo { width:42px; height:42px; background:radial-gradient(circle at 30% 30%, #f3d5bd, #e8b89b); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:21px; box-shadow:0 3px 10px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.3); }
+  .brand h1 { font-size:15px; font-weight:600; letter-spacing:.2px; }
+  .brand p { font-size:11px; opacity:.85; }
+  .lang { background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.2); color:#fff; padding:6px 10px; border-radius:20px; font-size:12px; cursor:pointer; }
+
+  .messages { flex:1; padding:16px; overflow-y:auto; background:linear-gradient(180deg, #fdf9f5 0%, #f7f0ea 100%); display:flex; flex-direction:column; gap:12px; scroll-behavior:smooth; }
+  .msg { max-width:82%; padding:11px 15px; border-radius:17px; font-size:14px; line-height:1.55; white-space:pre-wrap; box-shadow:0 2px 6px rgba(45,27,20,.06); animation:msgIn .28s ease both; }
+  @keyframes msgIn { from { opacity:0; transform: translateY(8px);} to { opacity:1; transform:none; } }
+  .bot { align-self:flex-start; background:#fff; border:1px solid #efe6dd; border-top-left-radius:5px; }
+  .user { align-self:flex-end; background:linear-gradient(135deg, #2d1b14, #4a2f22); color:#fff; border-top-right-radius:5px; box-shadow:0 3px 10px rgba(45,27,20,.2); }
+
+  .typing { display:inline-flex; align-items:center; gap:4px; }
+  .typing span { width:7px; height:7px; background:#b7a394; border-radius:50%; animation:typingBounce 1.2s infinite; }
+  .typing span:nth-child(2){ animation-delay:.15s; }
+  .typing span:nth-child(3){ animation-delay:.3s; }
+  @keyframes typingBounce { 0%,60%,100% { transform:translateY(0); opacity:.35;} 30% { transform:translateY(-5px); opacity:1; } }
+
+  .quickbook { border-top:1px solid #f0e8e0; background:linear-gradient(180deg, #fdf9f5, #faf4ee); padding:8px 14px; }
+  .qb-toggle { width:100%; background:none; border:none; color:#6b4230; font-size:12px; font-weight:600; cursor:pointer; padding:6px 0; text-align:left; transition:opacity .2s; }
+  .qb-toggle:hover { opacity:.7; }
+  .qb-body { max-height:0; overflow:hidden; transition:max-height .35s ease, padding .35s ease; }
+  .qb-body.open { max-height:420px; padding:8px 0 6px; }
+  .qb-row { margin-bottom:7px; }
+  .qb-row input, .qb-row select { width:100%; padding:10px 12px; border:1px solid #e2d5c9; border-radius:11px; font-size:13px; outline:none; background:#fff; transition:border-color .2s; }
+  .qb-row input:focus, .qb-row select:focus { border-color:#6b4230; }
+  .qb-row-inline { display:flex; gap:7px; }
   .qb-row-inline input { flex:1; }
-  .qb-submit { width:100%; background:#2d1b14; color:#fff; border:none; border-radius:12px; padding:10px; font-size:14px; cursor:pointer; }
-  .qb-result { margin-top:6px; font-size:13px; font-weight:600; min-height:16px; color:#1a8f4a; }
+  .qb-submit { width:100%; background:linear-gradient(135deg, #2d1b14, #5a3825); color:#fff; border:none; border-radius:13px; padding:11px; font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 3px 10px rgba(45,27,20,.2); transition:transform .15s, box-shadow .15s; }
+  .qb-submit:hover { transform:translateY(-1px); box-shadow:0 5px 14px rgba(45,27,20,.25); }
+  .qb-submit:active { transform:scale(.98); }
+  .qb-result { margin-top:8px; font-size:13px; font-weight:600; min-height:16px; color:#1a8f4a; }
+
+  .inputbar { display:flex; gap:8px; padding:12px 14px; background:#fff; border-top:1px solid #f0e8e0; }
+  .inputbar input { flex:1; padding:12px 16px; border:1px solid #e2d5c9; border-radius:24px; font-size:14px; outline:none; background:#fdf9f5; transition:border-color .2s, box-shadow .2s; }
+  .inputbar input:focus { border-color:#6b4230; box-shadow:0 0 0 3px rgba(107,66,48,.08); }
+  .send { background:linear-gradient(135deg, #2d1b14, #5a3825); color:#fff; border:none; border-radius:24px; padding:0 22px; font-size:14px; cursor:pointer; box-shadow:0 3px 8px rgba(45,27,20,.2); transition:transform .15s, opacity .15s; }
+  .send:hover { transform:translateY(-1px); opacity:.92; }
+  .send:active { transform:scale(.97); }
 </style>
 </head>
 <body>
 <div class="app">
   <header>
     <div class="brand">
-      <div class="logo">💇‍♀️</div>
+      <div class="logo">&#128132;&zwj;&zwj;</div>
       <div>
-        <h1 data-i18n="brandName">Daisy Salon AI Assistant</h1>
+        <h1 data-i18n="brandName">Daisy Salon · Online Booking</h1>
         <p data-i18n="brandSub">Book appointments easily — 24/7</p>
       </div>
     </div>
@@ -55,8 +71,8 @@
   <div class="messages" id="messages"></div>
 
   <div class="quickbook" id="quickbookPanel">
-    <button class="qb-toggle" id="qbToggle">📋 Quick Booking / 快速预约 <span id="qbArrow">▾</span></button>
-    <div class="qb-body" id="qbBody" style="display:none">
+    <button class="qb-toggle" id="qbToggle">&#128203; Quick Booking / 快速预约 <span id="qbArrow">▾</span></button>
+    <div class="qb-body" id="qbBody">
       <div class="qb-row"><input id="qbName" placeholder="Name / 姓名" autocomplete="off"></div>
       <div class="qb-row"><input id="qbPhone" placeholder="Phone / 电话" autocomplete="off"></div>
       <div class="qb-row">
@@ -77,6 +93,7 @@
       <div class="qb-result" id="qbResult"></div>
     </div>
   </div>
+
   <div class="inputbar">
     <input id="msgInput" type="text" data-i18n-placeholder="inputPlaceholder" placeholder="Type your message..." autocomplete="off">
     <button class="send" id="sendBtn" data-i18n="sendBtn">Send</button>
@@ -84,31 +101,27 @@
 </div>
 
 <script>
-// ---------- i18n ----------
 const I18N = {
   en: {
-    brandName: "Daisy Salon AI Assistant",
+    brandName: "Daisy Salon · Online Booking",
     brandSub: "Book appointments easily — 24/7",
     inputPlaceholder: "Type your message...",
     sendBtn: "Send",
-    welcome: "Hello! 👋 Welcome to Daisy Salon. I can help you book, check, or cancel an appointment.\n\nWhat service would you like today?",
-    placeholderSamples: ["Try: Book a haircut tomorrow at 10am", "Try: What services do you offer?"]
+    welcome: "Hello! &#128075; Welcome to Daisy Salon. I can help you book, check, or cancel an appointment.\n\nWhat service would you like today?"
   },
   zh: {
-    brandName: "黛西美发店 AI 助手",
+    brandName: "黛西美发店 · 在线预约",
     brandSub: "轻松预约 — 24 小时在线",
     inputPlaceholder: "输入你的消息...",
     sendBtn: "发送",
-    welcome: "你好！👋 欢迎来到黛西美发店。我可以帮你预约、查询或取消预约。\n\n今天想做什么服务呢？",
-    placeholderSamples: ["试试：我想明天上午10点预约剪发", "试试：你们有什么服务？"]
+    welcome: "你好！&#128075; 欢迎来到黛西美发店。我可以帮你预约、查询或取消预约。\n\n今天想做什么服务呢？"
   },
   es: {
-    brandName: "Asistente de Daisy Salon",
+    brandName: "Daisy Salon · Reservas Online",
     brandSub: "Reserva citas fácilmente — 24/7",
     inputPlaceholder: "Escribe tu mensaje...",
     sendBtn: "Enviar",
-    welcome: "¡Hola! 👋 Bienvenido a Daisy Salon. Puedo ayudarte a reservar, consultar o cancelar una cita.\n\n¿Qué servicio te gustaría hoy?",
-    placeholderSamples: ["Prueba: Reservar un corte mañana a las 10", "Prueba: ¿Qué servicios ofrecen?"]
+    welcome: "¡Hola! &#128075; Bienvenido a Daisy Salon. Puedo ayudarte a reservar, consultar o cancelar una cita.\n\n¿Qué servicio te gustaría hoy?"
   }
 };
 let currentLang = 'en';
@@ -123,7 +136,6 @@ function applyLang(lang) {
   });
 }
 
-// ---------- chat ----------
 const messagesEl = document.getElementById('messages');
 const inputEl = document.getElementById('msgInput');
 const sendBtn = document.getElementById('sendBtn');
@@ -140,7 +152,7 @@ function showTyping() {
   const div = document.createElement('div');
   div.className = 'msg bot typing';
   div.id = 'typing';
-  div.textContent = '...';
+  for (let i = 0; i < 3; i++) div.appendChild(document.createElement('span'));
   messagesEl.appendChild(div);
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
@@ -165,7 +177,7 @@ async function send() {
     hideTyping();
     if (!res.ok || data.degraded) {
       addMessage("⚠️ AI service is busy (model rate-limited). Please use the Quick Booking form below.\n模型繁忙，请用下方快速预约表单。", 'bot');
-      document.getElementById('qbBody').style.display = 'block';
+      document.getElementById('qbBody').classList.add('open');
       document.getElementById('qbArrow').textContent = '▴';
     } else {
       addMessage(data.reply || '...', 'bot');
@@ -176,11 +188,13 @@ async function send() {
   }
 }
 
-// ---------- quick booking fallback (no AI needed) ----------
+sendBtn.addEventListener('click', send);
+inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+
 document.getElementById('qbToggle').addEventListener('click', function() {
   const b = document.getElementById('qbBody');
-  b.style.display = b.style.display === 'none' ? 'block' : 'none';
-  document.getElementById('qbArrow').textContent = b.style.display === 'none' ? '▾' : '▴';
+  b.classList.toggle('open');
+  document.getElementById('qbArrow').textContent = b.classList.contains('open') ? '▴' : '▾';
 });
 document.getElementById('qbSubmit').addEventListener('click', async function() {
   const resEl = document.getElementById('qbResult');
@@ -214,16 +228,11 @@ document.getElementById('qbSubmit').addEventListener('click', async function() {
   }
 });
 
-sendBtn.addEventListener('click', send);
-inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
-
-// ---------- init ----------
 applyLang('en');
 addMessage(I18N.en.welcome, 'bot');
 document.getElementById('langSelect').addEventListener('change', function() {
   currentLang = this.value;
   applyLang(currentLang);
-  // show a localized welcome when switching, if conversation is empty
   if (messagesEl.children.length <= 1) {
     messagesEl.replaceChildren();
     addMessage(I18N[currentLang].welcome, 'bot');

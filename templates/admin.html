@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daisy Salon · Booking Admin Dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: linear-gradient(135deg, #faf6f2 0%, #f0e8e0 100%); padding: 32px 20px; min-height: 100vh; }
+  .card { max-width: 1060px; margin: 0 auto; background: #fff; border-radius: 18px; box-shadow: 0 8px 32px rgba(45,27,20,.10); overflow: hidden; }
+  .header { background: linear-gradient(135deg, #2d1b14, #5a3825); color: #fff; padding: 28px 32px; }
+  .header .brand { display: flex; align-items: center; gap: 12px; }
+  .logo { width: 46px; height: 46px; background: #e8b89b; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+  .header h1 { font-size: 22px; font-weight: 600; }
+  .header p { opacity: .8; margin-top: 4px; font-size: 13px; }
+  .stats { display: flex; gap: 16px; padding: 22px 32px; background: #fbf8f6; border-bottom: 1px solid #eee; }
+  .stat { flex: 1; background: #fff; border-radius: 14px; padding: 16px 20px; box-shadow: 0 2px 10px rgba(0,0,0,.05); text-align: center; border: 1px solid #f0e8e0; }
+  .stat .num { font-size: 30px; font-weight: 700; color: #2d1b14; }
+  .stat .label { font-size: 12px; color: #8a6f5c; margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+  .stat.confirmed .num { color: #1a8f4a; }
+  .stat.cancelled .num { color: #d93b3b; }
+  .filters { display: flex; flex-wrap: wrap; gap: 12px; padding: 18px 32px; background: #fff; border-bottom: 1px solid #eee; align-items: center; }
+  .filters select, .filters input { padding: 10px 14px; border: 1px solid #ddd; border-radius: 10px; font-size: 14px; outline: none; background: #fff; }
+  .filters select:focus, .filters input:focus { border-color: #5a3825; }
+  .filters input[type="text"] { flex: 1; min-width: 180px; }
+  .filters .clear-btn { padding: 10px 16px; border: none; border-radius: 10px; background: #2d1b14; color: #fff; cursor: pointer; font-size: 13px; }
+  .filters .clear-btn:hover { background: #5a3825; }
+  .table-wrap { overflow-y: auto; max-height: 520px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+  th { background: #faf7f4; color: #8a6f5c; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; position: sticky; top: 0; }
+  tbody tr { transition: background .15s; }
+  tbody tr:hover { background: #faf7f4; }
+  .mono { font-family: Consolas, monospace; color: #5a3825; font-weight: 600; }
+  .badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; display: inline-block; }
+  .badge.confirmed { background: #e6f7ec; color: #1a8f4a; }
+  .badge.cancelled { background: #fdeaea; color: #d93b3b; }
+  .empty { text-align: center; color: #aaa; padding: 32px; }
+  .footer { padding: 16px 32px; color: #b0a090; font-size: 12px; text-align: center; }
+  .fade-in { animation: fadeIn .3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px);} to { opacity: 1; transform: none; } }
+</style>
+</head>
+<body>
+  <div class="card fade-in">
+    <div class="header">
+      <div class="brand">
+        <div class="logo">💇‍♀️</div>
+        <div>
+          <h1>Daisy Salon · Booking Admin Dashboard</h1>
+          <p>Manager view · All customer bookings (local SQLite booking.db)</p>
+        </div>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="num">{{ total }}</div><div class="label">Total Bookings</div></div>
+      <div class="stat confirmed"><div class="num">{{ confirmed }}</div><div class="label">Confirmed</div></div>
+      <div class="stat cancelled"><div class="num">{{ cancelled }}</div><div class="label">Cancelled</div></div>
+    </div>
+    <div class="filters">
+      <select id="fStatus">
+        <option value="">All Status</option>
+        <option value="confirmed">✅ Confirmed</option>
+        <option value="cancelled">❌ Cancelled</option>
+      </select>
+      <input type="text" id="fService" placeholder="Search service... e.g. Hair cut">
+      <input type="text" id="fDate" placeholder="Search date (YYYY-MM-DD)...">
+      <button class="clear-btn" id="fClear">Reset</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Code</th><th>Customer</th><th>Phone</th><th>Service</th><th>Time</th><th>Status</th></tr>
+        </thead>
+        <tbody id="tbody">
+          {% for b in bookings %}
+          <tr data-status="{{ b['status'] }}" data-service="{{ b['service']|lower }}" data-time="{{ b['event_time'] }}">
+            <td class="mono">{{ b['booking_code'] }}</td>
+            <td>{{ b['customer_name'] }}</td>
+            <td>{{ b['phone'] }}</td>
+            <td>{{ b['service'] }}</td>
+            <td>{{ b['event_time'] }}</td>
+            <td>{% if b['status'] == 'confirmed' %}<span class="badge confirmed">✅ Confirmed</span>{% else %}<span class="badge cancelled">❌ Cancelled</span>{% endif %}</td>
+          </tr>
+          {% endfor %}
+          {% if not bookings %}
+          <tr><td colspan="6" class="empty">No bookings yet</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+    <div class="footer">Daisy Salon AI Booking Assistant · Data from booking.db · Scroll &amp; filter</div>
+  </div>
+
+<script>
+  const tbody = document.getElementById('tbody');
+  const fStatus = document.getElementById('fStatus');
+  const fService = document.getElementById('fService');
+  const fDate = document.getElementById('fDate');
+  const rows = [...tbody.querySelectorAll('tr')];
+
+  function applyFilter() {
+    const status = fStatus.value;
+    const service = fService.value.trim().toLowerCase();
+    const date = fDate.value.trim();
+    rows.forEach(row => {
+      const okStatus = !status || row.dataset.status === status;
+      const okService = !service || row.dataset.service.includes(service);
+      const okDate = !date || (row.dataset.time || '').startsWith(date);
+      row.style.display = (okStatus && okService && okDate) ? '' : 'none';
+    });
+  }
+
+  fStatus.addEventListener('change', applyFilter);
+  fService.addEventListener('input', applyFilter);
+  fDate.addEventListener('input', applyFilter);
+  document.getElementById('fClear').addEventListener('click', () => {
+    fStatus.value = ''; fService.value = ''; fDate.value = '';
+    applyFilter();
+  });
+</script>
+</body>
+</html>
