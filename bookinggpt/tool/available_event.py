@@ -1,55 +1,32 @@
-import os
 import datetime
+import os
 from zoneinfo import ZoneInfo
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
+
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from pydantic import Field
 from langchain.tools import BaseTool
 
-from bookinggpt.utils import SCOPES, CREDENTIALS_FILE, TOKEN_FILE
+from bookinggpt.google_auth import get_credentials
+
+
+def _timezone():
+    return ZoneInfo(os.getenv("SALON_TIMEZONE", "Asia/Ho_Chi_Minh"))
 
 
 class AvailableSlotsTool(BaseTool):
     name = "available_slots_tool"
     description = """
     A tool for showing available slots on Google Calendar for the current week, excluding Sundays.
-    
+
     Input: No input required. The tool will automatically use the current time and date.
-    
+
     Output: A string listing available time slots for each day of the current week (excluding Sunday),
     starting from the current day until Saturday.
-    
+
     Note: This tool checks for available slots between 9:00 AM and 6:00 PM on weekdays and Saturdays.
     """
 
     slot_duration: int = 60  # Set slot duration as a class attribute
-
-    def get_credentials(self):
-        # If no Google credentials configured, return None so calendar sync is skipped gracefully.
-        if not os.path.exists(CREDENTIALS_FILE):
-            print(f"Google Calendar credentials not found at {CREDENTIALS_FILE}. Returning demo slots.")
-            return None
-        creds = None
-        if os.path.exists(TOKEN_FILE):
-            creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                try:
-                    creds.refresh(Request())
-                except Exception as e:
-                    print(f"Error refreshing credentials: {e}")
-                    creds = None
-            if not creds:
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    CREDENTIALS_FILE, SCOPES
-                )
-                creds = flow.run_local_server(port=0)
-            with open(TOKEN_FILE, "w") as token:
-                token.write(creds.to_json())
-        return creds
 
     def get_busy_slots(self, service, start_time, end_time):
         try:
@@ -69,7 +46,6 @@ class AvailableSlotsTool(BaseTool):
             print(f"An error occurred while fetching events: {error}")
             return []
 
-
     def _get_demo_slots(self, current_time):
         """Return demo available slots without Google Calendar (local/demo use)."""
         available_slots = {}
@@ -79,7 +55,7 @@ class AvailableSlotsTool(BaseTool):
             if current_date.weekday() != 6:  # Skip Sunday
                 slots = []
                 for hour in range(9, 18):
-                    slot = datetime.datetime.combine(current_date, datetime.time(hour, 0)).replace(tzinfo=ZoneInfo("Asia/Ho_Chi_Minh"))
+                    slot = datetime.datetime.combine(current_date, datetime.time(hour, 0)).replace(tzinfo=_timezone())
                     if current_date == current_time.date() and slot <= current_time:
                         continue
                     slots.append(slot)
@@ -89,27 +65,27 @@ class AvailableSlotsTool(BaseTool):
 
     def get_available_slots(self, current_time):
         try:
-            creds = self.get_credentials()
+            creds = get_credentials()
             if not creds:
                 return self._get_demo_slots(current_time)
-            
+
             service = build("calendar", "v3", credentials=creds)
-            
+
             start_time = current_time.replace(hour=0, minute=0, second=0, microsecond=0)
             end_time = start_time + datetime.timedelta(days=(6 - start_time.weekday()))
-            
+
             busy_slots = self.get_busy_slots(service, start_time, end_time)
-            
+
             available_slots = {}
             current_date = start_time.date()
             while current_date <= end_time.date():
                 if current_date.weekday() != 6:  # Skip Sunday
-                    day_start = datetime.datetime.combine(current_date, datetime.time(9, 0)).replace(tzinfo=ZoneInfo("Asia/Ho_Chi_Minh"))
-                    day_end = datetime.datetime.combine(current_date, datetime.time(18, 0)).replace(tzinfo=ZoneInfo("Asia/Ho_Chi_Minh"))
-                    
+                    day_start = datetime.datetime.combine(current_date, datetime.time(9, 0)).replace(tzinfo=_timezone())
+                    day_end = datetime.datetime.combine(current_date, datetime.time(18, 0)).replace(tzinfo=_timezone())
+
                     if current_date == current_time.date():
                         day_start = max(day_start, current_time)
-                    
+
                     available_slots[current_date] = []
                     current_slot = day_start
                     while current_slot < day_end:
@@ -117,18 +93,18 @@ class AvailableSlotsTool(BaseTool):
                         if all(slot_end <= busy_start or current_slot >= busy_end for busy_start, busy_end in busy_slots):
                             available_slots[current_date].append(current_slot)
                         current_slot += datetime.timedelta(minutes=self.slot_duration)
-                
+
                 current_date += datetime.timedelta(days=1)
-            
+
             return available_slots
 
         except HttpError as error:
             return f"An error occurred: {error}"
 
     def _run(self, *args, **kwargs) -> str:
-        current_time = datetime.datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+        current_time = datetime.datetime.now(_timezone())
         available_slots = self.get_available_slots(current_time)
-        
+
         if isinstance(available_slots, dict):
             result = "Available slots for the current week:\n"
             for date, slots in available_slots.items():

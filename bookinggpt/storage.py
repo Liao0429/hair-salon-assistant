@@ -50,20 +50,25 @@ def create_booking(booking_code, customer_name, phone="", service="", event_time
 
 
 def cancel_booking(booking_code, phone=""):
-    """Mark a booking as cancelled (by code and optional phone)."""
+    """Mark a booking as cancelled (by code and optional phone).
+
+    Returns the number of rows updated (0 if no matching booking was found).
+    """
     init_db()
     conn = get_connection()
     if phone:
-        conn.execute(
+        cur = conn.execute(
             "UPDATE bookings SET status='cancelled' WHERE booking_code=? AND phone=?",
             (booking_code, phone),
         )
     else:
-        conn.execute(
+        cur = conn.execute(
             "UPDATE bookings SET status='cancelled' WHERE booking_code=?", (booking_code,)
         )
     conn.commit()
+    affected = cur.rowcount
     conn.close()
+    return affected
 
 
 def list_bookings(status=None):

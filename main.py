@@ -1,8 +1,7 @@
 import os
 from dotenv import load_dotenv
 from bookinggpt.agent.booking_agent import BookingAgent
-from langchain_core.language_models.base import BaseLanguageModel
-from langchain_openai import ChatOpenAI
+from bookinggpt.llm import create_llm
 
 # Load environment variables
 load_dotenv()
@@ -13,13 +12,7 @@ def main():
     #   OPENAI_API_KEY=<key>
     #   OPENAI_BASE_URL=https://api.openrouter.ai/api/v1  (or provider of choice)
     #   MODEL_NAME=<model>
-    llm: BaseLanguageModel = ChatOpenAI(
-        model=os.getenv("MODEL_NAME", "gpt-4o-mini"),
-        api_key=os.getenv("OPENAI_API_KEY"),
-        base_url=os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
-        temperature=0.3,
-        streaming=False,
-)
+    llm = create_llm()
 
     booking_agent = BookingAgent(llm)
 

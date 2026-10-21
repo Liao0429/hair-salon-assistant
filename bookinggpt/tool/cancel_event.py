@@ -1,67 +1,45 @@
-import os
 import json
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
+
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from langchain.tools import BaseTool
 
-from bookinggpt.utils import SCOPES, CREDENTIALS_FILE, TOKEN_FILE
+from bookinggpt.google_auth import get_credentials
 from bookinggpt.storage import cancel_booking
+
 
 class CancelEventTool(BaseTool):
     name = "cancel_event_tool"
     description = """
     A Google Calendar tool for canceling existing events.
-    
+
     Input: JSON object containing booking code and customer phone number.
     Example input: {
         "booking_code": "ABC123",
         "customer_phone": "1234567890"
     }
-    
+
     Output: String confirming cancellation, error message, or request for missing information.
-    
-    Note: Both booking code and customer phone number are required. If either is missing, 
-    the tool will request the customer to provide the missing information. 
+
+    Note: Both booking code and customer phone number are required. If either is missing,
+    the tool will request the customer to provide the missing information.
     Do not proceed with cancellation unless both pieces of information are provided.
     """
 
-    def get_credentials(self):
-        # If no Google credentials configured, return None so calendar sync is skipped gracefully.
-        if not os.path.exists(CREDENTIALS_FILE):
-            print(f"Google Calendar credentials not found at {CREDENTIALS_FILE}. Skipping sync.")
-            return None
-        creds = None
-        if os.path.exists(TOKEN_FILE):
-            creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                try:
-                    creds.refresh(Request())
-                except Exception as e:
-                    print(f"Error refreshing credentials: {e}")
-                    creds = None
-            if not creds:
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    CREDENTIALS_FILE, SCOPES
-                )
-                creds = flow.run_local_server(port=0)
-            with open(TOKEN_FILE, "w") as token:
-                token.write(creds.to_json())
-        return creds
-
     def cancel_event(self, booking_code: str, customer_phone: str):
-        # 1) Update local SQLite first (zero-config)
+        # 1) Update local SQLite first (zero-config). If no row matched, report it instead
+        #    of returning a false success.
         try:
-            cancel_booking(booking_code, customer_phone)
+            affected = cancel_booking(booking_code, customer_phone)
+            if affected == 0:
+                return (f"No matching booking found for code {booking_code}"
+                        + (f" and phone {customer_phone}." if customer_phone else "."))
         except Exception as e:
             return f"Failed to cancel booking locally: {e}"
 
         # 2) Try Google Calendar deletion (optional)
         try:
-            creds = self.get_credentials()
+            creds = get_credentials()
             if not creds:
                 return (f"Booking {booking_code} cancelled locally. "
                         "Google Calendar sync unavailable (no credentials).")
@@ -73,7 +51,7 @@ class CancelEventTool(BaseTool):
             for event in events:
                 description = event.get('description', '')
                 if (f"Booking Code: {booking_code}" in description and
-                    f"Phone: {customer_phone}" in description):
+                        f"Phone: {customer_phone}" in description):
                     service.events().delete(calendarId='primary', eventId=event['id']).execute()
                     return (f"Booking {booking_code} cancelled. "
                             f"Event {event['id']} removed from calendar.")

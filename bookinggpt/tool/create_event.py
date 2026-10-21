@@ -1,35 +1,40 @@
-import os
 import datetime
-import uuid
+import os
+from typing import Optional
 from zoneinfo import ZoneInfo
 
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from pydantic import BaseModel, Field
 from langchain.tools import BaseTool
-from langchain.agents import create_tool_calling_agent
-from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
-from typing import Optional
-from dotenv import load_dotenv
-from langchain.agents import AgentExecutor
-from langchain.prompts import ChatPromptTemplate
+from pydantic import BaseModel, Field
 
-from bookinggpt.utils import SCOPES, CREDENTIALS_FILE, TOKEN_FILE
-from bookinggpt.agent.prompt import PROMPT_TEMPLATE
+from bookinggpt.google_auth import get_credentials
+from bookinggpt.llm import create_llm
 from bookinggpt.storage import create_booking
+from bookinggpt.utils import generate_booking_code
 
-# Load environment variables
-load_dotenv()
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+# Service name (lowercased) -> default duration in minutes, used when the LLM
+# does not provide an explicit end time.
+SERVICE_DURATIONS = {
+    "hair wash": 20,
+    "hair cut": 30,
+    "hair styling": 30,
+    "beard trim": 15,
+    "hair coloring": 60,
+    "hair treatment": 45,
+    "scalp massage": 15,
+    "eyebrow shaping": 10,
+    "facial": 45,
+    "manicure": 30,
+}
 
 
-def generate_booking_code():
-    return str(uuid.uuid4())[:8]
+def _default_duration(service: str) -> int:
+    """Return the default appointment duration for a service (minutes)."""
+    key = (service or "").strip().lower()
+    return SERVICE_DURATIONS.get(key, 30)
 
 
 class EventInfo(BaseModel):
@@ -38,15 +43,19 @@ class EventInfo(BaseModel):
     customer_phone: str = Field(description="Customer's phone number")
     start_time: str = Field(description="Start time of the event in 24-hour format (HH:MM)")
     end_time: str = Field(description="End time of the event in 24-hour format (HH:MM)")
-    booking_code: Optional[str] = Field(description="Unique booking code")
+    booking_code: Optional[str] = Field(default=None, description="Unique booking code")
     customer_service: str = Field(description="Service requested by the customer")
+    date: Optional[str] = Field(
+        default=None,
+        description="Appointment date in YYYY-MM-DD format. Use null if the customer did not specify a date.",
+    )
 
 
 class CalendarTool(BaseTool):
     name = "calendar_tool"
     description = """
     A Google Calendar scheduling tool for creating new events, including hair salon appointments.
-    
+
     Input: JSON object containing customer information and preferred appointment time.
     Example input: {
         "customer_name": "John Doe",
@@ -54,9 +63,9 @@ class CalendarTool(BaseTool):
         "service": "Hair wash",
         "start_time": "14:00",
         "end_time": "15:00",
-        "date": "tomorrow"
+        "date": "2026-10-25"
     }
-    
+
     Output: JSON object with booking details.
     Example output: {
         "status": "success",
@@ -65,39 +74,39 @@ class CalendarTool(BaseTool):
     }
     """
 
-    def get_credentials(self):
-        # If no Google credentials configured, return None so calendar sync is skipped gracefully.
-        if not os.path.exists(CREDENTIALS_FILE):
-            print(f"Google Calendar credentials not found at {CREDENTIALS_FILE}. Skipping sync.")
-            return None
-        creds = None
-        if os.path.exists(TOKEN_FILE):
-            creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                try:
-                    creds.refresh(Request())
-                except Exception as e:
-                    print(f"Error refreshing credentials: {e}")
-                    creds = None
-            if not creds:
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    CREDENTIALS_FILE, SCOPES
-                )
-                creds = flow.run_local_server(port=0)
-            with open(TOKEN_FILE, "w") as token:
-                token.write(creds.to_json())
-        return creds
+    @staticmethod
+    def _resolve_start_time(event_info: EventInfo, current_time: datetime.datetime) -> datetime.datetime:
+        """Resolve the appointment start time from the requested date/time.
+
+        Uses `event_info.date` (YYYY-MM-DD) when the customer provided one;
+        otherwise falls back to "tomorrow" for backward compatibility.
+        """
+        hour, minute = (int(x) for x in event_info.start_time.split(":")[:2])
+        tz = current_time.tzinfo or ZoneInfo(os.getenv("SALON_TIMEZONE", "Asia/Ho_Chi_Minh"))
+
+        if event_info.date:
+            try:
+                d = datetime.date.fromisoformat(event_info.date.strip())
+                return datetime.datetime(d.year, d.month, d.day, hour, minute, tzinfo=tz)
+            except ValueError:
+                print(f"Invalid date '{event_info.date}', falling back to tomorrow.")
+
+        day = (current_time + datetime.timedelta(days=1)).date()
+        return datetime.datetime(day.year, day.month, day.day, hour, minute, tzinfo=tz)
+
+    @staticmethod
+    def _resolve_end_time(event_info: EventInfo, start_time: datetime.datetime) -> datetime.datetime:
+        """Resolve the end time from explicit input, or from the service duration."""
+        if event_info.end_time and ":" in event_info.end_time:
+            hour, minute = (int(x) for x in event_info.end_time.split(":")[:2])
+            return start_time.replace(hour=hour, minute=minute)
+        return start_time + datetime.timedelta(minutes=_default_duration(event_info.customer_service))
 
     def create_event(self, event_info: EventInfo, current_time: datetime.datetime):
         # 1) Persist to local SQLite first (zero-config, works without Google credentials)
         try:
-            start_time = current_time.replace(
-                hour=int(event_info.start_time.split(":")[0]),
-                minute=int(event_info.start_time.split(":")[1]),
-                second=0,
-                microsecond=0
-            ) + datetime.timedelta(days=1)
+            start_time = self._resolve_start_time(event_info, current_time)
+            end_time = self._resolve_end_time(event_info, start_time)
             event_time_str = start_time.strftime("%Y-%m-%d %H:%M")
             create_booking(
                 booking_code=event_info.booking_code,
@@ -111,20 +120,14 @@ class CalendarTool(BaseTool):
 
         # 2) Try Google Calendar sync (optional; does not block local persistence)
         try:
-            creds = self.get_credentials()
+            creds = get_credentials()
             if not creds:
                 return (f"Booking {event_info.booking_code} saved locally. "
                         "Google Calendar sync unavailable (no credentials).")
 
             service = build("calendar", "v3", credentials=creds)
 
-            end_time = start_time.replace(
-                hour=int(event_info.end_time.split(":")[0]),
-                minute=int(event_info.end_time.split(":")[1]),
-                second=0,
-                microsecond=0
-            )
-
+            timezone = os.getenv("SALON_TIMEZONE", "Asia/Ho_Chi_Minh")
             event = {
                 'summary': f"{event_info.customer_name} - {event_info.customer_service}",
                 'description': f"Service: {event_info.customer_service}\n"
@@ -132,11 +135,11 @@ class CalendarTool(BaseTool):
                                f"Booking Code: {event_info.booking_code}",
                 'start': {
                     'dateTime': start_time.isoformat(),
-                    'timeZone': 'Asia/Ho_Chi_Minh',
+                    'timeZone': timezone,
                 },
                 'end': {
                     'dateTime': end_time.isoformat(),
-                    'timeZone': 'Asia/Ho_Chi_Minh',
+                    'timeZone': timezone,
                 },
             }
 
@@ -153,25 +156,21 @@ class CalendarTool(BaseTool):
         parser = PydanticOutputParser(pydantic_object=EventInfo)
         prompt = PromptTemplate(
             template="Extract the following information from the user query. "
-                     "If the query mentions 'tomorrow' or 'mai', use the next day's date. "
-                     "Convert time to 24-hour format (HH:MM):\n"
-                     "{format_instructions}\n"
-                     "User query: {query}\n"
-                     "Current time: {current_time}\n",
+                    "If the customer provides a specific date (e.g. 'this Friday', 'tomorrow', "
+                    "'2026-10-25'), convert it to YYYY-MM-DD format in the 'date' field. "
+                    "If no date is mentioned, leave 'date' as null. "
+                    "Convert time to 24-hour format (HH:MM):\n"
+                    "{format_instructions}\n"
+                    "User query: {query}\n"
+                    "Current time: {current_time}\n",
             input_variables=["query", "current_time"],
             partial_variables={"format_instructions": parser.get_format_instructions()}
         )
 
-        llm = ChatOpenAI(
-        model=os.getenv("MODEL_NAME", "u2-flash"),
-        api_key=os.getenv("OPENAI_API_KEY"),
-        base_url=os.getenv("OPENAI_BASE_URL"),
-        temperature=0,
-        streaming=False,
-)
+        llm = create_llm(temperature=0)
         chain = prompt | llm | parser
 
-        current_time = datetime.datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+        current_time = datetime.datetime.now(ZoneInfo(os.getenv("SALON_TIMEZONE", "Asia/Ho_Chi_Minh")))
         event_info = chain.invoke({
             "query": query,
             "current_time": current_time.isoformat()

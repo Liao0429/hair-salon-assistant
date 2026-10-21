@@ -3,7 +3,6 @@
 langchain==0.2.12
 langchain-core==0.2.35
 langchain-openai==0.1.22
-langchain-community==0.2.11
 google-api-python-client==2.127.0
 google-auth-httplib2==0.2.0
 google-auth-oauthlib==1.2.1
@@ -14,4 +13,3 @@ tzdata==2024.1  # IANA timezone database (required on Windows for zoneinfo)
 fastapi==0.110.3
 uvicorn==0.29.0
 jinja2==3.1.4
-python-multipart==0.0.9
