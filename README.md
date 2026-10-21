@@ -1,191 +1,202 @@
 # AI Hair Salon Booking Assistant 💇‍♀️🤖
 
-> **本项目基于 [BookingGPT](https://github.com/Hoanganhvu123/BookingGPT)（MIT 许可）二次开发**：
-> 将原模型层从 Google Gemini 替换为 **OpenAI 兼容接口**（OpenRouter / 智谱 / 任意 `/v1` 端点），精简依赖并整理为符合 GitHub 规范的维护结构。
+**English** | [**中文**](README.zh-CN.md)
 
-## 🌟 Key Features
+An AI-powered conversational booking assistant for hair salons. Customers book appointments by chatting naturally — the AI understands intent, checks available slots, creates bookings, and handles cancellations. A zero-config web interface, an SQLite fallback, and a protected admin dashboard make it production-ready for small salons.
 
-- 🤖 AI 对话式预约助手（订位 / 查时段 / 取消）
-- 📅 Google Calendar 集成（预约自动写入日历）
-- 💬 自然语言交互，收集姓名 / 电话 / 服务 / 时间
-- 🔌 **模型无关**：任何 OpenAI 兼容 API 均可驱动（OpenRouter、智谱、DeepSeek、客户自带 key）
+## ✨ Key Features
 
-## 🛠️ Tech Stack
+- 🤖 **Conversational booking** — book, check slots, and cancel by natural language
+- 🌍 **Trilingual interface** — English (default), 中文, Español, one-click switch
+- 🔌 **Model-agnostic** — works with any OpenAI-compatible API (`/v1/chat/completions`)
+- 🛡️ **Protected admin dashboard** — view and filter all bookings, secured with `ADMIN_TOKEN`
+- ⚡ **No-AI fallback** — if the model is down or rate-limited, a quick-booking form still records the appointment
+- 💾 **Zero-config storage** — SQLite, no external database required
+- 📅 **Google Calendar** — optional integration for calendar-synced salons
 
-- Python 3.11+
-- LangChain（Agent + Tool Calling）
-- **OpenAI 兼容模型层**（可替换）
-- Google Calendar API
+## 📸 Screenshots
 
-## 🏗️ Project Structure
+All screenshots below are **real browser captures** (no mockups, no AI-rendered images).
+
+### 🤖 AI Booking Conversation
+
+| Screenshot | Description |
+|---|---|
+| ![Service list](docs/screenshots/real-services.png) | AI replies with the salon's service menu |
+| ![Booking in chat](docs/screenshots/real-booking.png) | AI collects details and confirms a booking in chat |
+| ![Booking confirmed](docs/screenshots/real-booking-confirmed.png) | Booking confirmed — a booking code is returned |
+| ![Cancel request](docs/screenshots/real-cancel.png) | Customer asks to cancel an appointment |
+| ![Cancellation processed](docs/screenshots/real-cancel-confirmed.png) | Cancellation completed |
+
+### 🌍 Trilingual Interface
+
+| Screenshot | Description |
+|---|---|
+| ![English UI](docs/screenshots/real-en.png) | English interface (default) |
+| ![中文界面](docs/screenshots/real-zh.png) | 中文界面 (Chinese) |
+| ![Interfaz en español](docs/screenshots/real-es.png) | Interfaz en español (Spanish) |
+
+### 🛡️ Resilience & Admin
+
+| Screenshot | Description |
+|---|---|
+| ![Quick booking](docs/screenshots/real-quickbook.png) | No-AI quick-booking form (fallback) |
+| ![Degraded mode](docs/screenshots/real-services-degraded.png) | Degraded mode — service list without AI |
+| ![Admin dashboard](docs/screenshots/real-admin-db.png) | Admin dashboard with all bookings |
+
+## 🏗️ Architecture
+
+The project follows a clean four-layer design:
+
+```
+┌─────────────────────────────────────────────┐
+│  Web Layer — FastAPI + frontend             │
+│  /api/chat · /api/booking · /api/health     │
+├─────────────────────────────────────────────┤
+│  Agent Layer — LangChain Agent              │
+│  BookingAgent + 3 tools (create/check/cancel)│
+├─────────────────────────────────────────────┤
+│  Model Layer — OpenAI-compatible (any /v1)  │
+├─────────────────────────────────────────────┤
+│  Storage Layer — SQLite (+ optional Google) │
+└─────────────────────────────────────────────┘
+```
+
+### How a booking works
+
+1. A customer types a message in the web chat (`POST /api/chat`).
+2. The LangChain agent calls the LLM to understand intent.
+3. The agent invokes a tool:
+   - `AvailableSlotsTool` — check free time slots
+   - `CalendarTool` — create the appointment
+   - `CancelEventTool` — cancel an existing appointment
+4. The booking is stored in SQLite; a `booking_code` is returned to the customer.
+5. The salon owner views/filters all bookings in the admin dashboard (`/bookings`).
+
+### No-AI fallback
+
+If the model is unavailable or rate-limited, the frontend automatically expands a **quick-booking form**. `POST /api/booking` writes directly to SQLite — no AI needed — so the salon never loses a booking.
+
+## 🧩 Tech Stack
+
+- **Python 3.11+**
+- **FastAPI** — web framework
+- **LangChain** — agent + tool calling
+- **OpenAI-compatible model layer** — any `/v1/chat/completions` endpoint
+- **SQLite** — zero-config booking storage
+- **Google Calendar API** — optional
+- **Vanilla HTML/CSS/JS** — trilingual chat UI + admin dashboard
+
+## 📁 Project Structure
 
 ```
 hair-salon-assistant/
+├── app.py                    # FastAPI entry + all API routes
+├── main.py                   # CLI entry
+├── view_bookings.py          # CLI: view bookings
+├── run_tests.py              # test helper
 ├── bookinggpt/
-│   ├── agent/             # Agent 与 Prompt 定义
-│   │   ├── booking_agent.py
-│   │   └── prompt.py
-│   ├── tool/                # 工具：创建/查时段/取消预约
-│   │   ├── create_event.py
-│   │   ├── available_event.py
-│   │   └── cancel_event.py
-│   ├── llm.py             # OpenAI 兼容模型工厂
-│   ├── google_auth.py    # Google Calendar OAuth（可选）
-│   ├── storage.py        # SQLite 预约存储
-│   ├── utils.py
-│   └── __init__.py
-├── app.py                # FastAPI Web 入口
-├── main.py               # CLI 入口
-├── view_bookings.py     # 命令行查看预约
-├── templates/            # 前端页面（index.html / admin.html）
-├── static/               # 静态资源（favicon.svg）
-├── security/             # Google Calendar 凭据（.example 模板）
-├── tests/                # 单元测试
-├── examples/             # 示例脚本（live_test.py）
-├── docs/                 # 文档与真实浏览器截图
-├── .github/workflows/   # GitHub Actions CI
-├── requirements.txt
-├── README.md
-├── LICENSE              # MIT（原作者许可）
-└── .gitignore
+│   ├── agent/
+│   │   ├── booking_agent.py  # LangChain agent (memory + tools)
+│   │   └── prompt.py         # system prompt
+│   ├── tool/
+│   │   ├── create_event.py   # tool: create appointment
+│   │   ├── available_event.py# tool: check available slots
+│   │   └── cancel_event.py   # tool: cancel appointment
+│   ├── llm.py                # OpenAI-compatible model factory
+│   ├── google_auth.py        # Google Calendar OAuth (optional)
+│   ├── storage.py            # SQLite storage
+│   └── utils.py
+├── templates/
+│   ├── index.html            # trilingual chat UI
+│   └── admin.html            # admin dashboard
+├── static/favicon.svg
+├── security/                 # Google OAuth templates (.example)
+├── tests/                    # 38 unit tests
+├── docs/                     # docs + real screenshots
+├── .github/workflows/ci.yml  # CI
+└── requirements.txt
 ```
 
-## 🚀 安装与运行
+## 🚀 Quick Start
 
-### 1. 克隆与安装依赖
+### 1. Clone & install
+
 ```bash
-git clone <your-fork-url> hair-salon-assistant
+git clone https://github.com/Liao0429/hair-salon-assistant.git
 cd hair-salon-assistant
 pip install -r requirements.txt
 ```
 
-### 2. 配置环境变量（`.env`）
-```bash
-# 模型（OpenAI 兼容）
-OPENAI_API_KEY=your_key_here
-OPENAI_BASE_URL=https://api.openrouter.ai/api/v1   # 或智谱/DeepSeek/其他
-MODEL_NAME=gpt-4o-mini                            # 按你的模型改
+### 2. Configure `.env`
 
-# 管理后台（可选，启用 /bookings 需设置）
+```bash
+# OpenAI-compatible model
+OPENAI_API_KEY=your_key_here
+OPENAI_BASE_URL=https://api.openrouter.ai/api/v1   # or DeepSeek / Zhipu / any
+MODEL_NAME=gpt-4o-mini                             # change to your model
+
+# Admin dashboard (required to enable /bookings)
 ADMIN_TOKEN=your_admin_token
 ```
-将 `security/credentials.json.example` 复制为 `security/credentials.json` 并填入 Google OAuth 凭据（如需 Google Calendar 集成）。
 
-### 3. 运行
+Optional: copy `security/credentials.json.example` → `security/credentials.json` and fill in Google OAuth credentials to enable Google Calendar integration.
+
+### 3. Run the web app
+
 ```bash
-python main.py
+uvicorn app:app --host 127.0.0.1 --port 8000
 ```
 
-## 🧪 测试
+Open http://localhost:8000 in your browser.
+
+### 4. Run tests
+
 ```bash
 pytest
 ```
 
-## 📄 许可
-MIT License（保留原作者 [Hoanganhvu123/BookingGPT](https://github.com/Hoanganhvu123/BookingGPT) 版权）。
+## 🔌 API
 
-## 🗺️ Roadmap
-- [x] Web/API 界面（FastAPI + 前端，三语 i18n）
-- [x] SQLite 预约存储（不依赖 Google Calendar，零配置落盘）
-- [x] 无 AI 保底预约（`POST /api/booking` 快速预约表单）
-- [x] 管理后台 `/bookings`（`ADMIN_TOKEN` 保护）
-- [ ] 用 OpenRouter/智谱实际跑通一次端到端对话（当前示例默认 `gpt-4o-mini`）
-- [ ] 部署到 Hugging Face Spaces / Railway / Render 等免费托管
-
-
-## 💰 客户部署与成本转移（OpenAI 标准形式）
-
-本项目模型层使用 **OpenAI 标准兼容接口**（`/v1/chat/completions`），因此**模型 API 成本可以完全转移给客户**：
-
-### 交付给客户的步骤
-1. 客户注册任一 OpenAI 兼容服务商并获取 API key（任选其一）：
-   - **OpenAI**：https://platform.openai.com/api-keys
-   - **OpenRouter**：https://openrouter.ai/keys （聚合多家模型，免绑卡可用免费模型）
-   - **DeepSeek / 智谱 / Moonshot** 等国内服务商
-2. 在客户的服务器/环境创建 `.env`：
-   ```bash
-   OPENAI_API_KEY=<客户自己的 key>
-   OPENAI_BASE_URL=https://api.openrouter.ai/api/v1   # 按客户选择的服务商
-   MODEL_NAME=gpt-4o-mini                             # 按客户选择的模型
-   ```
-3. 运行 `python main.py` → 所有 AI 调用走客户账户，**API 费用由客户承担**。
-
-### 你的角色
-- 你负责**搭建 + 配置 + 交付**，收一次性搭建费（$150-600）和可选月维护费。
-- 不承担模型 API 持续成本（客户自付 key 用量）。
-- 如需 Google Calendar 集成，同样用客户的 Google 账号 OAuth。
-
-> 这样你不需要维护任何模型服务器/API 额度，真正的"零成本交付"。
-
-
-
-## 🌐 Web 界面（作品集 / Gig 演示）
-
-本项目带一个**面向小白客户的聊天 Web 界面**（FastAPI + 前端）：
-- **默认英文**，支持 **English / 中文 / Español** 一键切换
-- 对话式预约：客户像用微信一样打字，AI 自动回复、查时段、预约
-- 零配置：打开网页就能用
-
-### 演示截图（真实浏览器截图）
-
-![English chat — Daisy Salon](docs/screenshots/real-en.png)
-![Booking flow in chat](docs/screenshots/real-booking.png)
-![Chinese interface](docs/screenshots/real-zh.png)
-![Spanish interface](docs/screenshots/real-es.png)
-![Quick Booking — no-AI fallback](docs/screenshots/real-quickbook.png)
-![Admin dashboard](docs/screenshots/real-admin-db.png)
-
-> 更多截图（预约确认 / 取消 / AI 降级保底）见 `docs/screenshots/`。
-
-- **无 AI 保底预约**：模型限速或不可用时，页面自动展开「快速预约」表单，`POST /api/booking` 直接写入 SQLite（不调用模型）。
-- **管理后台**：`http://localhost:8000/bookings`，需设置环境变量 `ADMIN_TOKEN` 后以 `?token=<值>` 访问。
-
-### 运行 Web 界面
-```bash
-pip install -r requirements.txt
-# 配置 .env（模型 key）
-.venv/Scripts/python.exe -m uvicorn app:app --host 127.0.0.1 --port 8000
-# 浏览器打开 http://localhost:8000
-```
-
-## 🔌 API 接口
-
-| 方法 | 路径 | 说明 | 鉴权 |
+| Method | Path | Description | Auth |
 |---|---|---|---|
-| `GET` | `/` | 聊天界面（默认英文，支持 EN / 中文 / ES） | 无 |
-| `POST` | `/api/chat` | 发送消息，返回 AI 回复（限流 + 长度限制） | 无 |
-| `POST` | `/api/booking` | 快速预约（不调用 AI，直接写入 SQLite） | 无 |
-| `GET` | `/api/health` | 健康检查 | 无 |
-| `GET` | `/bookings` | 管理后台页面（预约列表） | `ADMIN_TOKEN` |
+| `GET` | `/` | Chat interface (EN / 中文 / ES) | — |
+| `POST` | `/api/chat` | Send a message, get AI reply (rate-limited) | — |
+| `POST` | `/api/booking` | Quick booking (no AI, writes to SQLite) | — |
+| `GET` | `/api/health` | Health check | — |
+| `GET` | `/bookings` | Admin dashboard (booking list) | `ADMIN_TOKEN` |
 
-**快速预约** `POST /api/booking`
+**Quick booking** `POST /api/booking`
+
 ```json
-{ "customer_name": "张伟", "phone": "13800001111", "service": "Hair cut", "date": "2026-10-22", "time": "10:00" }
+{ "customer_name": "Emily Johnson", "phone": "+1 555-0100", "service": "Hair cut", "date": "2026-10-25", "time": "14:00" }
 ```
-返回 `{ "booking_code": "A1B2C3D4", "status": "confirmed" }`。
 
-**管理后台**：启动前设置 `ADMIN_TOKEN`，通过 `http://localhost:8000/bookings?token=<值>` 访问；未设置 `ADMIN_TOKEN` 返回 503，token 错误返回 401。
+Response:
 
-## 🎯 项目定位
-- **作品集**：展示 AI Agent 搭建能力（LangChain + 工具调用 + Web 界面）
-- **Fiverr Gig 演示**：接"AI 预约助手 / AI Chatbot"单时，直接演示这个成品
-- **GitHub 开源**：可二次开发，MIT 许可
+```json
+{ "booking_code": "A1B2C3D4", "status": "confirmed" }
+```
 
-## 🔒 安全说明
-- `.env`、`security/credentials.json`、`security/token.json`、`booking.db` 均已被 `.gitignore` 排除，不会入库。
-- 仓库只包含 `.env.example` 与 `security/*.example` 模板，无任何真实密钥/token。
-- 管理后台 `/bookings` 受 `ADMIN_TOKEN` 保护，部署到公网前务必设置。
+**Admin dashboard**: set `ADMIN_TOKEN` before starting, then visit `/bookings?token=<value>`. If `ADMIN_TOKEN` is not set, the endpoint returns 503; a wrong token returns 401.
+
+## 🔒 Security
+
+- `.env`, `security/credentials.json`, `security/token.json`, and `booking.db` are excluded via `.gitignore` and never committed.
+- The repo ships only `.env.example` and `security/*.example` templates — no real keys or tokens.
+- The admin dashboard is protected by `ADMIN_TOKEN`.
 
 ## ⚙️ CI
-GitHub Actions 自动运行 `pytest`（`.github/workflows/ci.yml`），保证每次推送测试通过。
 
-## ✅ 验证记录（2026-10-21）
-- **环境**：Python 3.12 venv，依赖已安装
-- **模型**：任意 OpenAI 兼容端点（示例使用 `gpt-4o-mini`）
-- **结果**：AI 预约助手可正常对话——能列出服务清单、引导客户提供预约信息、调用工具订位/查时段/取消
-- **单元测试**：`pytest` 38 项全部通过
+GitHub Actions runs `pytest` on every push (`.github/workflows/ci.yml`).
 
-### 现场对话验证
-```bash
-.venv/Scripts/python.exe examples/live_test.py
-```
+## ✅ Verified (2026-10-21)
+
+- **Environment**: Python 3.12 venv, dependencies installed
+- **Model**: any OpenAI-compatible endpoint (example uses `gpt-4o-mini`)
+- **Result**: the assistant lists services, guides customers through booking, and calls tools to create/check/cancel appointments
+- **Tests**: `pytest` — 38 passed
+
+## 📄 License
+
+MIT License. See [LICENSE](LICENSE).
