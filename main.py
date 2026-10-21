@@ -1,4 +1,3 @@
-import os
 from dotenv import load_dotenv
 from bookinggpt.agent.booking_agent import BookingAgent
 from bookinggpt.llm import create_llm

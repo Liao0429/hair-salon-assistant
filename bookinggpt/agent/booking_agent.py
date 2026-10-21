@@ -1,5 +1,3 @@
-import os
-from dotenv import load_dotenv
 from langchain_core.language_models.base import BaseLanguageModel
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain.memory import ConversationBufferMemory

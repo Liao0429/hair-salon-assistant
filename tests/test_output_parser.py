@@ -4,7 +4,6 @@
 Keeps the OpenAI-compatible model layer (ChatOpenAI) without requiring a live
 endpoint: a fake LLM returns canned JSON so the parser logic is exercised.
 """
-import os
 from datetime import datetime
 from typing import Optional
 

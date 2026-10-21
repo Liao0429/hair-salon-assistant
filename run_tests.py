@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """并行运行项目测试：单元测试 + Web 接口测试 + 对话测试，生成报告到 docs/。"""
-import subprocess, os, sys, time, json, urllib.request, re
+import subprocess, os, time, json, urllib.request, re
 from concurrent.futures import ThreadPoolExecutor
 
 BASE = os.path.dirname(os.path.abspath(__file__))

@@ -1,13 +1,12 @@
 import os
 import json
 from json import JSONDecodeError
-from typing import List, Union, Dict
+from typing import List, Union
 from pydantic import BaseModel
 
 from langchain_core.agents import AgentAction, AgentActionMessageLog, AgentFinish
 from langchain_core.exceptions import OutputParserException
 from langchain_core.messages import AIMessage, BaseMessage, ToolCall
-from langchain_core.memory import BaseMemory
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.outputs import Generation, ChatGeneration
 from langchain.agents.agent import MultiActionAgentOutputParser
@@ -115,7 +114,6 @@ def main():
     from langchain_openai import ChatOpenAI
     
     llm = ChatOpenAI(model=os.getenv("MODEL_NAME","gpt-4o-mini"), api_key=os.getenv("OPENAI_API_KEY"), base_url=os.getenv("OPENAI_BASE_URL"))
-    parser = ToolsAgentOutputParser(llm)
     
     # Simulating an AI message with tool calls
     ai_message = AIMessage(

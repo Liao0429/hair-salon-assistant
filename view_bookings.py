@@ -18,7 +18,7 @@
 import sys
 import os
 import argparse
-from datetime import date, datetime
+from datetime import date
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from bookinggpt.storage import list_bookings
