@@ -113,8 +113,19 @@ MIT License（保留原作者 [Hoanganhvu123/BookingGPT](https://github.com/Hoan
 - 对话式预约：客户像用微信一样打字，AI 自动回复、查时段、预约
 - 零配置：打开网页就能用
 
-### 演示截图
-![Daisy Salon AI Assistant Demo](docs/demo.png)
+### 演示截图（真实浏览器截图）
+
+![English chat — Daisy Salon](docs/screenshots/real-en.png)
+![Booking flow in chat](docs/screenshots/real-booking.png)
+![Chinese interface](docs/screenshots/real-zh.png)
+![Spanish interface](docs/screenshots/real-es.png)
+![Quick Booking — no-AI fallback](docs/screenshots/real-quickbook.png)
+![Admin dashboard](docs/screenshots/real-admin-db.png)
+
+> 更多截图（预约确认 / 取消 / AI 降级保底）见 `docs/screenshots/`。
+
+- **无 AI 保底预约**：模型限速或不可用时，页面自动展开「快速预约」表单，`POST /api/booking` 直接写入 SQLite（不调用模型）。
+- **管理后台**：`http://localhost:8000/bookings`，需设置环境变量 `ADMIN_TOKEN` 后以 `?token=<值>` 访问。
 
 ### 运行 Web 界面
 ```bash

@@ -120,6 +120,9 @@ env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV .venv/Scripts/python.exe view_boo
 
 这是**管理者视图**：显示所有预约统计 + 预约表格（预约码/顾客/电话/服务/时间/状态），数据实时来自 `booking.db`。
 
+> 🔒 **访问保护**：后台受 `ADMIN_TOKEN` 保护。启动前先设置环境变量（如 `set ADMIN_TOKEN=your-token`），然后通过
+> `http://localhost:8000/bookings?token=your-token` 访问。未设置 `ADMIN_TOKEN` 时后台返回 503，token 错误返回 401。
+
 
 
 ## 5. 配置 Google Calendar（可选，用于真实日历同步）

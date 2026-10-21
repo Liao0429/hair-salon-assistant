@@ -3,32 +3,40 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2d1b14">
 <title>Daisy Salon · Booking Admin Dashboard</title>
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: linear-gradient(135deg, #faf6f2 0%, #f0e8e0 100%); padding: 32px 20px; min-height: 100vh; }
-  .card { max-width: 1060px; margin: 0 auto; background: #fff; border-radius: 18px; box-shadow: 0 8px 32px rgba(45,27,20,.10); overflow: hidden; }
-  .header { background: linear-gradient(135deg, #2d1b14, #5a3825); color: #fff; padding: 28px 32px; }
+  body { font-family:'Segoe UI', system-ui, -apple-system, sans-serif; background: linear-gradient(135deg, #faf6f2 0%, #f0e8e0 100%); padding: 24px 16px; min-height: 100vh; }
+  .card { max-width: 1080px; margin: 0 auto; background: #fff; border-radius: 18px; box-shadow: 0 8px 32px rgba(45,27,20,.10); overflow: hidden; }
+  .header { background: linear-gradient(135deg, #2d1b14, #5a3825); color: #fff; padding: 24px 28px; }
   .header .brand { display: flex; align-items: center; gap: 12px; }
-  .logo { width: 46px; height: 46px; background: #e8b89b; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
-  .header h1 { font-size: 22px; font-weight: 600; }
+  .logo { width: 46px; height: 46px; flex: 0 0 46px; background: #e8b89b; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+  .header h1 { font-size: 20px; font-weight: 600; }
   .header p { opacity: .8; margin-top: 4px; font-size: 13px; }
-  .stats { display: flex; gap: 16px; padding: 22px 32px; background: #fbf8f6; border-bottom: 1px solid #eee; }
-  .stat { flex: 1; background: #fff; border-radius: 14px; padding: 16px 20px; box-shadow: 0 2px 10px rgba(0,0,0,.05); text-align: center; border: 1px solid #f0e8e0; }
-  .stat .num { font-size: 30px; font-weight: 700; color: #2d1b14; }
+  .header .back-link { display: inline-block; margin-top: 12px; color: #e8b89b; font-size: 13px; text-decoration: none; }
+  .header .back-link:hover { text-decoration: underline; }
+
+  .stats { display: flex; gap: 14px; padding: 20px 28px; background: #fbf8f6; border-bottom: 1px solid #eee; flex-wrap: wrap; }
+  .stat { flex: 1; min-width: 130px; background: #fff; border-radius: 14px; padding: 14px 18px; box-shadow: 0 2px 10px rgba(0,0,0,.05); text-align: center; border: 1px solid #f0e8e0; }
+  .stat .num { font-size: 28px; font-weight: 700; color: #2d1b14; }
   .stat .label { font-size: 12px; color: #8a6f5c; margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
   .stat.confirmed .num { color: #1a8f4a; }
   .stat.cancelled .num { color: #d93b3b; }
-  .filters { display: flex; flex-wrap: wrap; gap: 12px; padding: 18px 32px; background: #fff; border-bottom: 1px solid #eee; align-items: center; }
-  .filters select, .filters input { padding: 10px 14px; border: 1px solid #ddd; border-radius: 10px; font-size: 14px; outline: none; background: #fff; }
-  .filters select:focus, .filters input:focus { border-color: #5a3825; }
-  .filters input[type="text"] { flex: 1; min-width: 180px; }
-  .filters .clear-btn { padding: 10px 16px; border: none; border-radius: 10px; background: #2d1b14; color: #fff; cursor: pointer; font-size: 13px; }
+
+  .filters { display: flex; flex-wrap: wrap; gap: 12px; padding: 16px 28px; background: #fff; border-bottom: 1px solid #eee; align-items: center; }
+  .filters label { font-size: 12px; font-weight: 600; color: #8a6f5c; text-transform: uppercase; letter-spacing: .4px; }
+  .filters select, .filters input { padding: 9px 13px; border: 1px solid #ddd; border-radius: 10px; font-size: 14px; outline: none; background: #fff; }
+  .filters select:focus, .filters input:focus { border-color: #5a3825; box-shadow: 0 0 0 3px rgba(90,56,37,.08); }
+  .filters input[type="text"] { flex: 1; min-width: 160px; }
+  .filters .clear-btn { padding: 9px 16px; border: none; border-radius: 10px; background: #2d1b14; color: #fff; cursor: pointer; font-size: 13px; }
   .filters .clear-btn:hover { background: #5a3825; }
-  .table-wrap { overflow-y: auto; max-height: 520px; }
-  table { width: 100%; border-collapse: collapse; }
+
+  .table-wrap { overflow: auto; max-height: 540px; }
+  table { width: 100%; border-collapse: collapse; min-width: 640px; }
   th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
-  th { background: #faf7f4; color: #8a6f5c; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; position: sticky; top: 0; }
+  th { background: #faf7f4; color: #8a6f5c; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; position: sticky; top: 0; z-index: 1; }
   tbody tr { transition: background .15s; }
   tbody tr:hover { background: #faf7f4; }
   .mono { font-family: Consolas, monospace; color: #5a3825; font-weight: 600; }
@@ -36,19 +44,33 @@
   .badge.confirmed { background: #e6f7ec; color: #1a8f4a; }
   .badge.cancelled { background: #fdeaea; color: #d93b3b; }
   .empty { text-align: center; color: #aaa; padding: 32px; }
-  .footer { padding: 16px 32px; color: #b0a090; font-size: 12px; text-align: center; }
+
+  .footer { padding: 14px 28px; color: #b0a090; font-size: 12px; text-align: center; }
+  .footer a { color: #5a3825; }
   .fade-in { animation: fadeIn .3s ease; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(4px);} to { opacity: 1; transform: none; } }
+
+  .noscript { background:#fdeaea; color:#b3261e; font-size:13px; padding:10px 14px; text-align:center; border-top:1px solid #f5d2d0; }
+
+  @media (max-width: 640px) {
+    body { padding: 12px 8px; }
+    .header, .stats, .filters { padding-left: 16px; padding-right: 16px; }
+    .stats { gap: 10px; }
+    .stat { min-width: 100px; padding: 10px 12px; }
+    .stat .num { font-size: 22px; }
+    .filters input[type="text"] { min-width: 100%; }
+  }
 </style>
 </head>
 <body>
   <div class="card fade-in">
     <div class="header">
       <div class="brand">
-        <div class="logo">💇‍♀️</div>
+        <div class="logo" aria-hidden="true">💇‍♀️</div>
         <div>
           <h1>Daisy Salon · Booking Admin Dashboard</h1>
           <p>Manager view · All customer bookings (local SQLite booking.db)</p>
+          <a class="back-link" href="/">← Back to chat / 返回聊天</a>
         </div>
       </div>
     </div>
@@ -58,13 +80,14 @@
       <div class="stat cancelled"><div class="num">{{ cancelled }}</div><div class="label">Cancelled</div></div>
     </div>
     <div class="filters">
+      <label for="fStatus">Status</label>
       <select id="fStatus">
         <option value="">All Status</option>
         <option value="confirmed">✅ Confirmed</option>
         <option value="cancelled">❌ Cancelled</option>
       </select>
-      <input type="text" id="fService" placeholder="Search service... e.g. Hair cut">
-      <input type="text" id="fDate" placeholder="Search date (YYYY-MM-DD)...">
+      <input type="text" id="fService" placeholder="Search service... e.g. Hair cut" aria-label="Search service">
+      <input type="text" id="fDate" placeholder="Search date (YYYY-MM-DD)..." aria-label="Search date">
       <button class="clear-btn" id="fClear">Reset</button>
     </div>
     <div class="table-wrap">
@@ -89,9 +112,10 @@
         </tbody>
       </table>
     </div>
-    <div class="footer">Daisy Salon AI Booking Assistant · Data from booking.db · Scroll &amp; filter</div>
+    <div class="footer">Daisy Salon AI Booking Assistant · <a href="/">Back to chat</a> · Data from booking.db</div>
   </div>
 
+<noscript><div class="noscript">JavaScript is disabled — filters won't work, but the full table is shown below. / JavaScript 已禁用 — 筛选不可用，但下方表格仍完整显示。</div></noscript>
 <script>
   const tbody = document.getElementById('tbody');
   const fStatus = document.getElementById('fStatus');
@@ -103,12 +127,31 @@
     const status = fStatus.value;
     const service = fService.value.trim().toLowerCase();
     const date = fDate.value.trim();
+    let visible = 0;
     rows.forEach(row => {
       const okStatus = !status || row.dataset.status === status;
       const okService = !service || row.dataset.service.includes(service);
       const okDate = !date || (row.dataset.time || '').startsWith(date);
-      row.style.display = (okStatus && okService && okDate) ? '' : 'none';
+      const show = okStatus && okService && okDate;
+      row.style.display = show ? '' : 'none';
+      if (show) visible++;
     });
+    // Show "no match" row when filters hide everything
+    let emptyRow = document.getElementById('noMatchRow');
+    if (visible === 0 && rows.length > 0) {
+      if (!emptyRow) {
+        emptyRow = document.createElement('tr');
+        emptyRow.id = 'noMatchRow';
+        const td = document.createElement('td');
+        td.colSpan = 6;
+        td.className = 'empty';
+        td.textContent = 'No bookings match your filters';
+        emptyRow.appendChild(td);
+      }
+      tbody.appendChild(emptyRow);
+    } else if (emptyRow) {
+      emptyRow.remove();
+    }
   }
 
   fStatus.addEventListener('change', applyFilter);
