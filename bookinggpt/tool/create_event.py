@@ -166,8 +166,9 @@ class CalendarTool(BaseTool):
         model=os.getenv("MODEL_NAME", "u2-flash"),
         api_key=os.getenv("OPENAI_API_KEY"),
         base_url=os.getenv("OPENAI_BASE_URL"),
-        temperature=0
-    )
+        temperature=0,
+        streaming=False,
+)
         chain = prompt | llm | parser
 
         current_time = datetime.datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))

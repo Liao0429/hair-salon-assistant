@@ -29,6 +29,10 @@ class CancelEventTool(BaseTool):
     """
 
     def get_credentials(self):
+        # If no Google credentials configured, return None so calendar sync is skipped gracefully.
+        if not os.path.exists(CREDENTIALS_FILE):
+            print(f"Google Calendar credentials not found at {CREDENTIALS_FILE}. Skipping sync.")
+            return None
         creds = None
         if os.path.exists(TOKEN_FILE):
             creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)

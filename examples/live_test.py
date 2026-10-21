@@ -13,6 +13,7 @@ llm = ChatOpenAI(
     api_key=os.getenv("OPENAI_API_KEY"),
     base_url=os.getenv("OPENAI_BASE_URL", "https://maas-api.unisound.com/v1"),
     temperature=0.3,
+    streaming=False,
 )
 agent = BookingAgent(llm)
 print("=== 测试 1：询问服务清单（不触发日历工具） ===")

@@ -29,6 +29,7 @@ llm = ChatOpenAI(
     api_key=os.getenv("OPENAI_API_KEY"),
     base_url=os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
     temperature=0.3,
+    streaming=False,
 )
 # Per-session agents: each session_id gets its own agent with isolated memory.
 # Fixes H2 (previously all web visitors shared one global conversation memory).

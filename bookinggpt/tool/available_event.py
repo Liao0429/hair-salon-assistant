@@ -28,6 +28,10 @@ class AvailableSlotsTool(BaseTool):
     slot_duration: int = 60  # Set slot duration as a class attribute
 
     def get_credentials(self):
+        # If no Google credentials configured, return None so calendar sync is skipped gracefully.
+        if not os.path.exists(CREDENTIALS_FILE):
+            print(f"Google Calendar credentials not found at {CREDENTIALS_FILE}. Returning demo slots.")
+            return None
         creds = None
         if os.path.exists(TOKEN_FILE):
             creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
@@ -65,11 +69,29 @@ class AvailableSlotsTool(BaseTool):
             print(f"An error occurred while fetching events: {error}")
             return []
 
+
+    def _get_demo_slots(self, current_time):
+        """Return demo available slots without Google Calendar (local/demo use)."""
+        available_slots = {}
+        current_date = current_time.date()
+        end_date = current_date + datetime.timedelta(days=(6 - current_date.weekday()))
+        while current_date <= end_date:
+            if current_date.weekday() != 6:  # Skip Sunday
+                slots = []
+                for hour in range(9, 18):
+                    slot = datetime.datetime.combine(current_date, datetime.time(hour, 0)).replace(tzinfo=ZoneInfo("Asia/Ho_Chi_Minh"))
+                    if current_date == current_time.date() and slot <= current_time:
+                        continue
+                    slots.append(slot)
+                available_slots[current_date] = slots
+            current_date += datetime.timedelta(days=1)
+        return available_slots
+
     def get_available_slots(self, current_time):
         try:
             creds = self.get_credentials()
             if not creds:
-                return "Failed to obtain valid credentials."
+                return self._get_demo_slots(current_time)
             
             service = build("calendar", "v3", credentials=creds)
             
