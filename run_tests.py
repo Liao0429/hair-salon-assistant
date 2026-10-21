@@ -3,12 +3,12 @@
 import subprocess, os, sys, time, json, urllib.request, re
 from concurrent.futures import ThreadPoolExecutor
 
-BASE = r"G:\hair-salon-assistant"
+BASE = os.path.dirname(os.path.abspath(__file__))
 VENV_PY = os.path.join(BASE, ".venv", "Scripts", "python.exe")
 DOCS = os.path.join(BASE, "docs")
 os.makedirs(DOCS, exist_ok=True)
 
-# 干净环境：避免被 Hermes 的 PYTHONPATH 污染
+# 干净环境：避免被外部 PYTHONPATH 污染
 CLEAN_ENV = {k: v for k, v in os.environ.items() if k not in ("PYTHONPATH", "PYTHONHOME", "VIRTUAL_ENV")}
 
 

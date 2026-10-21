@@ -114,7 +114,7 @@ def main():
     # Example usage
     from langchain_openai import ChatOpenAI
     
-    llm = ChatOpenAI(model=os.getenv("MODEL_NAME","u2-flash"), api_key=os.getenv("OPENAI_API_KEY"), base_url=os.getenv("OPENAI_BASE_URL"))
+    llm = ChatOpenAI(model=os.getenv("MODEL_NAME","gpt-4o-mini"), api_key=os.getenv("OPENAI_API_KEY"), base_url=os.getenv("OPENAI_BASE_URL"))
     parser = ToolsAgentOutputParser(llm)
     
     # Simulating an AI message with tool calls

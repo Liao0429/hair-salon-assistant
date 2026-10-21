@@ -21,13 +21,13 @@
 
 这是 AI 美发店预约助手的完整使用说明。适合**开发者/项目作者**，也适合**交付给客户前的操作**。
 
-## 0. 前置条件（本项目已具备）
+## 0. 前置条件
 
-- 项目目录：`G:\hair-salon-assistant`
-- Python 虚拟环境：`G:\hair-salon-assistant\.venv`（已装好所有依赖）
-- 模型配置：`.env` 文件（当前指向 ofm 免费模型网关，零成本）
+- 项目目录：仓库克隆后的本地根目录（下文以 `项目根目录` 指代）
+- Python 虚拟环境：`项目根目录\.venv`（首次运行请先执行 `setup.bat` 或 `pip install -r requirements.txt`）
+- 模型配置：复制 `.env.example` 为 `.env` 并填入你的 OpenAI 兼容模型参数
 
-> ⚠️ **Windows 注意事项**：如果从 Hermes/其他 Python 环境启动，可能会被 `PYTHONPATH` 污染。推荐用下面的 `env -u` 命令启动，确保干净环境。
+> ⚠️ **Windows 注意事项**：如果从其他 Python 环境（如全局/系统 Python）启动，可能会被 `PYTHONPATH` 污染。推荐用下面的 `env -u` 命令启动，确保干净环境。
 
 ## 2. 启动 Web 界面（手动方式）
 
@@ -72,16 +72,16 @@ OPENAI_BASE_URL=https://api.openai.com/v1      # 或 OpenRouter/智谱/DeepSeek 
 MODEL_NAME=gpt-4o-mini                          # 按服务商模型名填
 ```
 
-当前 `.env` 指向 ofm 免费网关（本地，零成本测试用）：
+当前 `.env` 示例（本地测试用，可换成任意 OpenAI 兼容服务商）：
 ```bash
-OPENAI_BASE_URL=http://127.0.0.1:18900/v1
-MODEL_NAME=kilo-auto/free
+OPENAI_BASE_URL=https://api.openai.com/v1
+MODEL_NAME=gpt-4o-mini
 ```
 
 
 ## 4.5 预约信息存储（SQLite，零配置）
 
-预约信息**自动保存到本地 SQLite 数据库**：`G:\hair-salon-assistant\booking.db`。
+预约信息**自动保存到本地 SQLite 数据库**：`项目根目录\booking.db`。
 - 无需配置任何外部服务，预约即落盘
 - 每次预约生成一个 `booking_code`（如 `A1B2C3D4`），用于取消/查询
 - Google Calendar 是**可选**同步（未配置时，预约仍保存在本地）

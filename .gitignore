@@ -1,9 +1,12 @@
 # Python cache files
 __pycache__/
 *.pyc
+.pytest_cache/
 
 # Environment variables
 .env
+.env.*
+!.env.example
 
 # Security related files
 security/credentials.json
