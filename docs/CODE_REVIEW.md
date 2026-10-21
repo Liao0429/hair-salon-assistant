@@ -113,3 +113,6 @@
 
 项目**结构清晰、模型层已统一为 OpenAI 标准、开源规范良好**，作为作品集/演示质量不错。
 但存在两个**会影响实际交付**的问题：`utils.py` 硬编码了原作者路径（H1），以及 Web 会话记忆全局共享（H2）。**若要部署给真实客户，必须先修复 H1 和 H2**；作为 GitHub 作品集，建议至少修复 H1（否则别人 clone 后日历功能是坏的）。
+### ✅ 已修复补充（2026-10-21）
+- **时区问题**：`zoneinfo.ZoneInfo("Asia/Ho_Chi_Minh")` 在 Windows 上报 `No time zone found` → 在 `requirements.txt` 添加 `tzdata`（IANA 时区数据库），Windows 必需。
+- **Google Calendar 凭据缺失优雅降级**：`get_credentials()` 在 `security/credentials.json` 不存在时返回 `None`（不再抛 FileNotFoundError），预约仍保存在本地 SQLite，Google 日历同步可选跳过。
