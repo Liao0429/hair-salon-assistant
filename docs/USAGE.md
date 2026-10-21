@@ -115,6 +115,13 @@ env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV .venv/Scripts/python.exe view_boo
 
 > `booking.db` 已被 `.gitignore` 排除（属于运行数据，不入库）。
 
+### 管理者后台（Web 查看预约）
+启动服务后，浏览器打开：**http://localhost:8000/bookings**
+
+这是**管理者视图**：显示所有预约统计 + 预约表格（预约码/顾客/电话/服务/时间/状态），数据实时来自 `booking.db`。
+
+
+
 ## 5. 配置 Google Calendar（可选，用于真实日历同步）
 
 1. 到 Google Cloud Console 创建 OAuth 凭据（桌面应用），下载 `credentials.json`
